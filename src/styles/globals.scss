@@ -9,3 +9,8 @@ body,
   background-color: $sky_bg;
   margin: 0;
 }
+
+.stats {
+  bottom: 0px;
+  top: unset !important;
+}

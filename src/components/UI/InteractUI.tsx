@@ -1,5 +1,5 @@
 const InteractUI = () => {
-  return <div>Hello</div>
+  return <div>Interact UI here</div>
 }
 
 export default InteractUI

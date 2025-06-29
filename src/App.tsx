@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import InteractUI from './components/UI/InteractUI'
-
 import { Canvas } from '@react-three/fiber'
+
+import InteractUI from './components/UI/InteractUI'
+import NewYork from './components/NewYork'
+import DebugGui from './components/debug/DebugGui'
 
 const App = () => {
   return (
@@ -10,9 +11,12 @@ const App = () => {
         camera={{
           fov: 45,
           near: 0.1,
-          far: 200
+          far: 300
         }}
-      ></Canvas>
+      >
+        <NewYork />
+        <DebugGui />
+      </Canvas>
 
       <InteractUI />
     </>
