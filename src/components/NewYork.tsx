@@ -6,9 +6,15 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import { useHelper } from '@react-three/drei'
 
+import { useAtom } from 'jotai'
+import { guiAtom } from '../store/store'
+import { useFrame } from '@react-three/fiber'
+
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
   const [sceneChildren, setSceneChildren] = useState<SceneChild[]>([])
+  const [dlightPosition] = useState(new THREE.Vector3(5, 15, 15))
+  const [gui] = useAtom(guiAtom)
 
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
 
@@ -16,9 +22,23 @@ const NewYork = () => {
   useHelper(directional_light_ref, THREE.DirectionalLightHelper, 1, 'red')
 
   useEffect(() => {
-    console.log('Model loaded!')
-    console.log(model)
-  }, [model])
+    if (!gui) return
+
+    const guiLightFolder = gui.addFolder('dLight')
+    guiLightFolder.add(dlightPosition, 'x').min(-80).max(80).step(0.01).name('positionX')
+    guiLightFolder.add(dlightPosition, 'y').min(-80).max(80).step(0.01).name('positionY')
+    guiLightFolder.add(dlightPosition, 'z').min(-80).max(80).step(0.01).name('positionZ')
+
+    return () => {
+      guiLightFolder.destroy()
+    }
+  }, [dlightPosition, gui])
+
+  useFrame(() => {
+    if (directional_light_ref.current) {
+      directional_light_ref.current.position.copy(dlightPosition)
+    }
+  })
 
   const getModel = () => {
     if (model) return <primitive object={model.scene} />
@@ -32,7 +52,7 @@ const NewYork = () => {
       <directionalLight
         ref={directional_light_ref}
         castShadow={false}
-        position={[5, 15, 15]}
+        position={dlightPosition}
         intensity={2}
         shadow-mapSize={[1024, 1024]}
         shadow-camera-near={1}
