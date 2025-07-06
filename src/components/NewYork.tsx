@@ -24,7 +24,7 @@ const NewYork = () => {
   useEffect(() => {
     if (!gui) return
 
-    const guiLightFolder = gui.addFolder('dLight')
+    const guiLightFolder = gui.addFolder('Directional Light')
     guiLightFolder.add(dlightPosition, 'x').min(-80).max(80).step(0.01).name('positionX')
     guiLightFolder.add(dlightPosition, 'y').min(-80).max(80).step(0.01).name('positionY')
     guiLightFolder.add(dlightPosition, 'z').min(-80).max(80).step(0.01).name('positionZ')
