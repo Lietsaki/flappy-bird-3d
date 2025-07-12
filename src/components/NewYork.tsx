@@ -1,5 +1,5 @@
 import { useGLTF } from '@react-three/drei'
-import type { SceneChild, PlatformSlice } from '../types/general_types'
+import type { SceneChild, PlatformSlice, BoundingBoxesMap } from '../types/general_types'
 import { useCallback, useEffect, useState } from 'react'
 
 import { useRef } from 'react'
@@ -8,21 +8,26 @@ import { Object3D } from 'three'
 import { useHelper } from '@react-three/drei'
 
 import { useAtom } from 'jotai'
-import { guiAtom } from '../store/store'
+import { boundingBoxesMapAtom, guiAtom } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
+import { showHelpersAtom } from '../store/store'
 
 const DISTANCE_BETWEEN_PIPES = 14
+const BBOX_COLLISION_COLOR = 'yellow'
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
   const [sceneChildren, setSceneChildren] = useState<SceneChild[]>([])
   const platformSlices = useRef<PlatformSlice[]>([])
   const [dlightPosition] = useState(new THREE.Vector3(5, 15, 15))
+
   const [gui] = useAtom(guiAtom)
+  const [showHelpers] = useAtom(showHelpersAtom)
+  const [bbMap, setBbMap] = useAtom(boundingBoxesMapAtom)
+
   const { scene } = useThree()
 
   const aux_vec3_1 = useRef(new THREE.Vector3())
-
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
 
   // This typing error doesn't affect us
@@ -35,11 +40,14 @@ const NewYork = () => {
     NYC_material.map!.minFilter = THREE.LinearFilter
 
     if (sceneChildren.length) return
+    const boundingBoxesMap: BoundingBoxesMap = {}
 
     const setupFirstSlice = () => {
       const first_pipe = model.scene.children.find((child) => child.name === 'pipe_bottom_0')
       const first_floor_platform = model.scene.children.find((child) => child.name === 'floor_platform_0')
-      if (!first_pipe || !first_floor_platform) return
+      const first_top_pipe_preexisting = model.scene.children.find((child) => child.name === 'pipe_top_0')
+
+      if (!first_pipe || !first_floor_platform || first_top_pipe_preexisting) return
 
       const first_top_pipe = first_pipe.clone()
       first_top_pipe.name = 'pipe_top_0'
@@ -55,7 +63,30 @@ const NewYork = () => {
       fourth_pipe.name = 'pipe_top_1'
       fourth_pipe.position.x += DISTANCE_BETWEEN_PIPES
 
-      model.scene.children.push(first_top_pipe, third_pipe, fourth_pipe)
+      // =========================== Bounding Boxes =========================== //
+
+      const first_slice_objects = [first_floor_platform, first_pipe, first_top_pipe, third_pipe, fourth_pipe]
+
+      for (const obj of first_slice_objects) {
+        const { name } = obj
+        const bbox = new THREE.Box3().setFromObject(obj)
+
+        boundingBoxesMap[name] = {
+          name,
+          bbox,
+          type: 'collision'
+        }
+
+        if (showHelpers) {
+          const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
+          boxHelper.name = `helper_${name}`
+          scene.add(boxHelper)
+        }
+      }
+
+      // ================================================================ //
+
+      model.scene.add(first_top_pipe, third_pipe, fourth_pipe)
       platformSlices.current.push({
         pipes: [first_pipe, first_top_pipe, third_pipe, fourth_pipe],
         terrain: first_floor_platform
@@ -71,8 +102,9 @@ const NewYork = () => {
       }
     })
 
+    setBbMap(boundingBoxesMap)
     setSceneChildren(processedSceneChildren)
-  }, [sceneChildren, model, scene.children])
+  }, [sceneChildren, model, scene, setBbMap, showHelpers])
 
   const addPlatform = useCallback(
     (side: 'left' | 'right') => {
@@ -132,17 +164,41 @@ const NewYork = () => {
         platformSlices.current.push(new_platform)
       }
 
-      const new_scene_children = [new_terrain, ...new_pipes].map((object) => {
+      // =========================== Bounding Boxes =========================== //
+
+      const new_platform_objects = [new_terrain, ...new_pipes]
+      const boundingBoxesMap: BoundingBoxesMap = {}
+
+      for (const obj of new_platform_objects) {
+        const { name } = obj
+        const bbox = new THREE.Box3().setFromObject(obj)
+
+        boundingBoxesMap[name] = {
+          name,
+          bbox,
+          type: 'collision'
+        }
+
+        if (showHelpers) {
+          const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
+          boxHelper.name = `helper_${name}`
+          scene.add(boxHelper)
+        }
+      }
+
+      const new_scene_children = new_platform_objects.map((object) => {
         return {
           object,
           element: <primitive object={object} key={object.id} />
         }
       })
 
+      // ================================================================ //
+
+      setBbMap({ ...bbMap, ...boundingBoxesMap })
       setSceneChildren([...sceneChildren, ...new_scene_children])
-      scene.children.push(new_terrain, ...new_pipes)
     },
-    [scene, sceneChildren]
+    [bbMap, scene, sceneChildren, setBbMap, showHelpers]
   )
 
   // GUI
