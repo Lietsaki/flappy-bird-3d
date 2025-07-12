@@ -80,8 +80,10 @@ const NewYork = () => {
       const previous_platform = platforms[previous_platform_i]
 
       const new_terrain = previous_platform.terrain.clone()
+      const new_terrain_number = Number(new_terrain.name.split('_')[2]) + (side === 'left' ? -1 : 1)
       const new_terrain_name = new_terrain.name.split('_')
-      new_terrain_name.splice(2, 1, previous_platform_i + '')
+
+      new_terrain_name.splice(2, 1, new_terrain_number + '')
       new_terrain.name = new_terrain_name.join('_')
 
       const DISTANCE_BETWEEN_TERRAINS = 35
