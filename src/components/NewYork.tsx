@@ -33,6 +33,32 @@ const NewYork = () => {
   // This typing error doesn't affect us
   useHelper(directional_light_ref, THREE.DirectionalLightHelper, 1, 'red')
 
+  const addBboxes = useCallback(
+    (objects: THREE.Object3D[]) => {
+      const boundingBoxesMap: BoundingBoxesMap = {}
+
+      for (const obj of objects) {
+        const { name } = obj
+        const bbox = new THREE.Box3().setFromObject(obj)
+
+        boundingBoxesMap[name] = {
+          name,
+          bbox,
+          type: 'collision'
+        }
+
+        if (showHelpers) {
+          const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
+          boxHelper.name = `helper_${name}`
+          scene.add(boxHelper)
+        }
+      }
+
+      return boundingBoxesMap
+    },
+    [scene, showHelpers]
+  )
+
   // Populate scene children
   useEffect(() => {
     // SET MIN FILTER IN THE TEXTURES THAT REQUIRE IT
@@ -40,7 +66,7 @@ const NewYork = () => {
     NYC_material.map!.minFilter = THREE.LinearFilter
 
     if (sceneChildren.length) return
-    const boundingBoxesMap: BoundingBoxesMap = {}
+    let boundingBoxesMap: BoundingBoxesMap = {}
 
     const setupFirstSlice = () => {
       const first_pipe = model.scene.children.find((child) => child.name === 'pipe_bottom_0')
@@ -63,28 +89,8 @@ const NewYork = () => {
       fourth_pipe.name = 'pipe_top_1'
       fourth_pipe.position.x += DISTANCE_BETWEEN_PIPES
 
-      // =========================== Bounding Boxes =========================== //
-
       const first_slice_objects = [first_floor_platform, first_pipe, first_top_pipe, third_pipe, fourth_pipe]
-
-      for (const obj of first_slice_objects) {
-        const { name } = obj
-        const bbox = new THREE.Box3().setFromObject(obj)
-
-        boundingBoxesMap[name] = {
-          name,
-          bbox,
-          type: 'collision'
-        }
-
-        if (showHelpers) {
-          const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
-          boxHelper.name = `helper_${name}`
-          scene.add(boxHelper)
-        }
-      }
-
-      // ================================================================ //
+      boundingBoxesMap = addBboxes(first_slice_objects)
 
       model.scene.add(first_top_pipe, third_pipe, fourth_pipe)
       platformSlices.current.push({
@@ -104,7 +110,7 @@ const NewYork = () => {
 
     setBbMap(boundingBoxesMap)
     setSceneChildren(processedSceneChildren)
-  }, [sceneChildren, model, scene, setBbMap, showHelpers])
+  }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes])
 
   const addPlatform = useCallback(
     (side: 'left' | 'right') => {
@@ -167,24 +173,7 @@ const NewYork = () => {
       // =========================== Bounding Boxes =========================== //
 
       const new_platform_objects = [new_terrain, ...new_pipes]
-      const boundingBoxesMap: BoundingBoxesMap = {}
-
-      for (const obj of new_platform_objects) {
-        const { name } = obj
-        const bbox = new THREE.Box3().setFromObject(obj)
-
-        boundingBoxesMap[name] = {
-          name,
-          bbox,
-          type: 'collision'
-        }
-
-        if (showHelpers) {
-          const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
-          boxHelper.name = `helper_${name}`
-          scene.add(boxHelper)
-        }
-      }
+      const boundingBoxesMap = addBboxes(new_platform_objects)
 
       const new_scene_children = new_platform_objects.map((object) => {
         return {
@@ -198,7 +187,7 @@ const NewYork = () => {
       setBbMap({ ...bbMap, ...boundingBoxesMap })
       setSceneChildren([...sceneChildren, ...new_scene_children])
     },
-    [bbMap, scene, sceneChildren, setBbMap, showHelpers]
+    [addBboxes, bbMap, sceneChildren, setBbMap]
   )
 
   // GUI
