@@ -21,6 +21,8 @@ const NewYork = () => {
   const [gui] = useAtom(guiAtom)
   const { scene } = useThree()
 
+  const aux_vec3_1 = useRef(new THREE.Vector3())
+
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
 
   // This typing error doesn't affect us
@@ -86,7 +88,13 @@ const NewYork = () => {
       new_terrain_name.splice(2, 1, new_terrain_number + '')
       new_terrain.name = new_terrain_name.join('_')
 
-      const DISTANCE_BETWEEN_TERRAINS = 35
+      const terrain_bbox = new THREE.Box3().setFromObject(new_terrain)
+
+      // Calculate terrain length: This is equivalent to bbox.max.x - bbox.min.x
+      const terrain_length = terrain_bbox.getSize(aux_vec3_1.current)
+
+      // The "gap" between terrains is a visual artifact, add a little offset to seal it.
+      const DISTANCE_BETWEEN_TERRAINS = terrain_length.x - 0.01
       new_terrain.position.x += side === 'left' ? -DISTANCE_BETWEEN_TERRAINS : DISTANCE_BETWEEN_TERRAINS
 
       const previous_pipes = previous_platform.pipes
@@ -173,6 +181,11 @@ const NewYork = () => {
     if (directional_light_ref.current) {
       directional_light_ref.current.position.copy(dlightPosition)
     }
+
+    // for (const platform of platformSlices.current) {
+    //   platform.terrain.position.x -= 0.05
+    //   platform.pipes.forEach((obj) => (obj.position.x -= 0.05))
+    // }
   })
 
   return (

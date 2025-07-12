@@ -14,8 +14,8 @@ const App = () => {
           makeDefault
           near={-100}
           far={200}
-          zoom={8}
-          position={[-25, 7, 0]}
+          zoom={26}
+          position={[-25, 13, 0]}
         ></OrthographicCamera>
 
         <DebugGui />
