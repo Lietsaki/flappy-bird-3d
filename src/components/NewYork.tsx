@@ -14,6 +14,7 @@ import { showHelpersAtom } from '../store/store'
 
 const DISTANCE_BETWEEN_PIPES = 14
 const BBOX_COLLISION_COLOR = 'yellow'
+const BBOX_SENSOR_COLOR = 'crimson'
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
@@ -49,6 +50,38 @@ const NewYork = () => {
 
         if (showHelpers) {
           const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
+          boxHelper.name = `helper_${name}`
+          scene.add(boxHelper)
+        }
+      }
+
+      // Add a sensor between pipes
+      const pipes = Object.values(boundingBoxesMap).filter((obj) => obj.name.includes('pipe'))
+
+      for (let i = 0; i < pipes.length; i += 2) {
+        const bottom_pipe = pipes[i]
+        const top_pipe = pipes[i + 1]
+        const pipes_number = bottom_pipe.name.split('_')[2]
+        const name = `sensor_pipes_${pipes_number}`
+
+        const bbox = new THREE.Box3(
+          new THREE.Vector3(bottom_pipe.bbox.min.x, bottom_pipe.bbox.max.y, bottom_pipe.bbox.min.z),
+          new THREE.Vector3(bottom_pipe.bbox.max.x, top_pipe.bbox.min.y, bottom_pipe.bbox.max.z)
+        )
+
+        bbox.min.x += 1
+        bbox.max.x -= 1
+        bbox.min.z += 1
+        bbox.max.z -= 1
+
+        boundingBoxesMap[name] = {
+          name,
+          bbox,
+          type: 'sensor'
+        }
+
+        if (showHelpers) {
+          const boxHelper = new THREE.Box3Helper(bbox, BBOX_SENSOR_COLOR)
           boxHelper.name = `helper_${name}`
           scene.add(boxHelper)
         }
@@ -136,7 +169,8 @@ const NewYork = () => {
       new_terrain.position.x += side === 'left' ? -DISTANCE_BETWEEN_TERRAINS : DISTANCE_BETWEEN_TERRAINS
 
       const previous_pipes = previous_platform.pipes
-      let last_pipe = side === 'left' ? previous_pipes[0] : previous_pipes[3]
+      const negative_previous_pipe = previous_pipes[0].name.includes('-')
+      let last_pipe = side === 'left' && !negative_previous_pipe ? previous_pipes[0] : previous_pipes[3]
       let current_pipe_number = Number(last_pipe.name.split('_')[2]) + (side === 'left' ? -1 : 1)
 
       const new_pipes = previous_platform.pipes.map((pipe, i) => {
@@ -156,8 +190,6 @@ const NewYork = () => {
 
         return new_pipe
       }) as [Object3D, Object3D, Object3D, Object3D]
-
-      if (side === 'left') new_pipes.reverse()
 
       const new_platform: PlatformSlice = {
         terrain: new_terrain,
