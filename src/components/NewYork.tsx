@@ -15,6 +15,7 @@ import { showHelpersAtom } from '../store/store'
 const DISTANCE_BETWEEN_PIPES = 14
 const BBOX_COLLISION_COLOR = 'yellow'
 const BBOX_SENSOR_COLOR = 'crimson'
+const LOOP_TRIGGER = -180
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
@@ -50,7 +51,12 @@ const NewYork = () => {
 
         if (showHelpers) {
           const boxHelper = new THREE.Box3Helper(bbox, BBOX_COLLISION_COLOR)
-          boxHelper.name = `helper_${name}`
+          const helperName = `helper_${name}`
+          boxHelper.name = helperName
+
+          const helper = scene.getObjectByName(helperName)
+          if (helper) scene.remove(helper)
+
           scene.add(boxHelper)
         }
       }
@@ -82,7 +88,12 @@ const NewYork = () => {
 
         if (showHelpers) {
           const boxHelper = new THREE.Box3Helper(bbox, BBOX_SENSOR_COLOR)
-          boxHelper.name = `helper_${name}`
+          const helperName = `helper_${name}`
+          boxHelper.name = helperName
+
+          const helper = scene.getObjectByName(helperName)
+          if (helper) scene.remove(helper)
+
           scene.add(boxHelper)
         }
       }
@@ -222,6 +233,36 @@ const NewYork = () => {
     [addBboxes, bbMap, sceneChildren, setBbMap]
   )
 
+  const movePlatformToFront = useCallback(
+    (platform: PlatformSlice) => {
+      if (platformSlices.current.length < 2) return
+
+      const last_platform = platformSlices.current[platformSlices.current.length - 1]
+      const terrain_bbox = new THREE.Box3().setFromObject(last_platform.terrain)
+      const distance_between_terrains = terrain_bbox.getSize(aux_vec3_1.current).x - 0.01
+
+      platform.terrain.position.x = last_platform.terrain.position.x + distance_between_terrains
+      let last_pipe = last_platform.pipes[3]
+
+      for (let i = 0; i < platform.pipes.length; i++) {
+        const pipe = platform.pipes[i]
+        pipe.position.x = last_pipe.position.x + DISTANCE_BETWEEN_PIPES
+
+        if (i % 2 !== 0) {
+          last_pipe = pipe
+        }
+      }
+
+      platformSlices.current = platformSlices.current.filter((platformSlice) => platformSlice !== platform)
+      platformSlices.current.push(platform)
+
+      const platform_objects = [platform.terrain, ...platform.pipes]
+      const boundingBoxesMap = addBboxes(platform_objects)
+      setBbMap({ ...bbMap, ...boundingBoxesMap })
+    },
+    [addBboxes, bbMap, setBbMap]
+  )
+
   // GUI
   useEffect(() => {
     if (!gui) return
@@ -234,10 +275,14 @@ const NewYork = () => {
       },
       addPlatformRight: () => {
         addPlatform('right')
+      },
+      moveLastPlatformToFront: () => {
+        movePlatformToFront(platformSlices.current[0])
       }
     }
     platformsFolder.add(platformFunctions, 'addPlatformLeft')
     platformsFolder.add(platformFunctions, 'addPlatformRight')
+    platformsFolder.add(platformFunctions, 'moveLastPlatformToFront')
 
     const guiLightFolder = gui.addFolder('Directional Light')
     guiLightFolder.add(dlightPosition, 'x').min(-80).max(80).step(0.01).name('positionX')
@@ -248,7 +293,7 @@ const NewYork = () => {
       guiLightFolder.destroy()
       platformsFolder.destroy()
     }
-  }, [dlightPosition, gui, addPlatform])
+  }, [dlightPosition, gui, addPlatform, movePlatformToFront])
 
   const renderScene = () => {
     return sceneChildren.map((child) => child.element)
