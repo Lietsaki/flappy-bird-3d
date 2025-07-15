@@ -238,14 +238,17 @@ const NewYork = () => {
       if (platformSlices.current.length < 2) return
 
       const last_platform = platformSlices.current[platformSlices.current.length - 1]
-      const terrain_bbox = new THREE.Box3().setFromObject(last_platform.terrain)
-      const distance_between_terrains = terrain_bbox.getSize(aux_vec3_1.current).x - 0.01
+      const last_terrain_bbox = new THREE.Box3().setFromObject(last_platform.terrain)
+      const distance_between_terrains = last_terrain_bbox.getSize(aux_vec3_1.current).x - 0.01
 
       platform.terrain.position.x = last_platform.terrain.position.x + distance_between_terrains
+      platform.terrain.name = last_platform.terrain.name
+
       let last_pipe = last_platform.pipes[3]
 
       for (let i = 0; i < platform.pipes.length; i++) {
         const pipe = platform.pipes[i]
+        pipe.name = last_platform.pipes[i].name
         pipe.position.x = last_pipe.position.x + DISTANCE_BETWEEN_PIPES
 
         if (i % 2 !== 0) {
@@ -256,11 +259,32 @@ const NewYork = () => {
       platformSlices.current = platformSlices.current.filter((platformSlice) => platformSlice !== platform)
       platformSlices.current.push(platform)
 
-      const platform_objects = [platform.terrain, ...platform.pipes]
-      const boundingBoxesMap = addBboxes(platform_objects)
-      setBbMap({ ...bbMap, ...boundingBoxesMap })
+      // Update the number of previous platforms
+      for (let i = platformSlices.current.length - 2; i >= 0; i--) {
+        const platform = platformSlices.current[i]
+        const new_terrain_name = platform.terrain.name.split('_')
+        const current_number = Number(new_terrain_name[2])
+
+        new_terrain_name.splice(2, 1, current_number - 1 + '')
+        platform.terrain.name = new_terrain_name.join('_')
+
+        for (const pipe of platform.pipes) {
+          const new_pipe_name = pipe.name.split('_')
+          const current_number = Number(new_pipe_name[2])
+
+          new_pipe_name.splice(2, 1, current_number - 2 + '')
+          pipe.name = new_pipe_name.join('_')
+        }
+      }
+
+      const platform_slice_objects = platformSlices.current
+        .map((slice) => [slice.terrain, ...slice.pipes])
+        .flat()
+
+      const boundingBoxesMap = addBboxes(platform_slice_objects)
+      setBbMap(boundingBoxesMap)
     },
-    [addBboxes, bbMap, setBbMap]
+    [addBboxes, setBbMap]
   )
 
   // GUI
