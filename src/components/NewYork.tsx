@@ -103,7 +103,7 @@ const NewYork = () => {
     [scene, showHelpers]
   )
 
-  // Populate scene children
+  // Populate scene children & setup first slice
   useEffect(() => {
     // SET MIN FILTER IN THE TEXTURES THAT REQUIRE IT
     const NYC_material = model.materials.nyc_material as THREE.MeshStandardMaterial
@@ -112,38 +112,34 @@ const NewYork = () => {
     if (sceneChildren.length) return
     let boundingBoxesMap: BoundingBoxesMap = {}
 
-    const setupFirstSlice = () => {
-      const first_pipe = model.scene.children.find((child) => child.name === 'pipe_bottom_0')
-      const first_floor_platform = model.scene.children.find((child) => child.name === 'floor_platform_0')
-      const first_top_pipe_preexisting = model.scene.children.find((child) => child.name === 'pipe_top_0')
+    const first_pipe = model.scene.children.find((child) => child.name === 'pipe_bottom_0')
+    const first_floor_platform = model.scene.children.find((child) => child.name === 'floor_platform_0')
+    const first_top_pipe_preexisting = model.scene.children.find((child) => child.name === 'pipe_top_0')
 
-      if (!first_pipe || !first_floor_platform || first_top_pipe_preexisting) return
+    if (!first_pipe || !first_floor_platform || first_top_pipe_preexisting) return
 
-      const first_top_pipe = first_pipe.clone()
-      first_top_pipe.name = 'pipe_top_0'
-      first_top_pipe.position.y = 30
-      first_top_pipe.rotation.z = Math.PI
-      first_top_pipe.rotation.y = Math.PI
+    const first_top_pipe = first_pipe.clone()
+    first_top_pipe.name = 'pipe_top_0'
+    first_top_pipe.position.y = 30
+    first_top_pipe.rotation.z = Math.PI
+    first_top_pipe.rotation.y = Math.PI
 
-      const third_pipe = first_pipe.clone()
-      third_pipe.name = 'pipe_bottom_1'
-      third_pipe.position.x += DISTANCE_BETWEEN_PIPES
+    const third_pipe = first_pipe.clone()
+    third_pipe.name = 'pipe_bottom_1'
+    third_pipe.position.x += DISTANCE_BETWEEN_PIPES
 
-      const fourth_pipe = first_top_pipe.clone()
-      fourth_pipe.name = 'pipe_top_1'
-      fourth_pipe.position.x += DISTANCE_BETWEEN_PIPES
+    const fourth_pipe = first_top_pipe.clone()
+    fourth_pipe.name = 'pipe_top_1'
+    fourth_pipe.position.x += DISTANCE_BETWEEN_PIPES
 
-      const first_slice_objects = [first_floor_platform, first_pipe, first_top_pipe, third_pipe, fourth_pipe]
-      boundingBoxesMap = addBboxes(first_slice_objects)
+    const first_slice_objects = [first_floor_platform, first_pipe, first_top_pipe, third_pipe, fourth_pipe]
+    boundingBoxesMap = addBboxes(first_slice_objects)
 
-      model.scene.add(first_top_pipe, third_pipe, fourth_pipe)
-      platformSlices.current.push({
-        pipes: [first_pipe, first_top_pipe, third_pipe, fourth_pipe],
-        terrain: first_floor_platform
-      })
-    }
-
-    setupFirstSlice()
+    model.scene.add(first_top_pipe, third_pipe, fourth_pipe)
+    platformSlices.current.push({
+      pipes: [first_pipe, first_top_pipe, third_pipe, fourth_pipe],
+      terrain: first_floor_platform
+    })
 
     const processedSceneChildren = model.scene.children.map((child) => {
       return {
@@ -323,15 +319,54 @@ const NewYork = () => {
     return sceneChildren.map((child) => child.element)
   }
 
-  useFrame(() => {
+  const updateBboxes = (obj: THREE.Object3D) => {
+    if (!bbMap) return
+
+    bbMap[obj.name].bbox.setFromObject(obj)
+  }
+
+  const updateSensors = (pipes: THREE.Object3D[]) => {
+    if (!bbMap) return
+
+    for (let i = 0; i < pipes.length; i += 2) {
+      const bottom_pipe = bbMap[pipes[i].name]
+      const top_pipe = bbMap[pipes[i + 1].name]
+      const pipes_number = bottom_pipe.name.split('_')[2]
+      const name = `sensor_pipes_${pipes_number}`
+
+      bbMap[name] = {
+        name,
+        bbox: bbMap[name].bbox.set(
+          new THREE.Vector3(bottom_pipe.bbox.min.x, bottom_pipe.bbox.max.y, bottom_pipe.bbox.min.z),
+          new THREE.Vector3(bottom_pipe.bbox.max.x, top_pipe.bbox.min.y, bottom_pipe.bbox.max.z)
+        ),
+        type: 'sensor'
+      }
+    }
+  }
+
+  useFrame((_state, delta) => {
+    if (!bbMap) return
+
     if (directional_light_ref.current) {
       directional_light_ref.current.position.copy(dlightPosition)
     }
 
-    // for (const platform of platformSlices.current) {
-    //   platform.terrain.position.x -= 0.05
-    //   platform.pipes.forEach((obj) => (obj.position.x -= 0.05))
-    // }
+    const game_vel = 0.8 * delta
+
+    for (const platform of platformSlices.current) {
+      if (!bbMap[platform.terrain.name]) continue
+
+      platform.terrain.position.x -= game_vel
+      updateBboxes(platform.terrain)
+
+      platform.pipes.forEach((pipe) => {
+        pipe.position.x -= game_vel
+        updateBboxes(pipe)
+      })
+
+      updateSensors(platform.pipes)
+    }
   })
 
   return (
