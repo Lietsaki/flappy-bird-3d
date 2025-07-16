@@ -153,66 +153,74 @@ const NewYork = () => {
   }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes])
 
   const addPlatform = useCallback(
-    (side: 'left' | 'right') => {
+    (
+      side: 'left' | 'right',
+      amount = 1
+    ): { updatedBbMap: BoundingBoxesMap; updatedSceneChildren: SceneChild[] } | null => {
+      if (amount < 1) return null
+      const new_platform_objects: Object3D[] = []
       const platforms = platformSlices.current
 
-      const previous_platform_i = side === 'left' ? 0 : platforms.length - 1
-      const previous_platform = platforms[previous_platform_i]
+      for (let i = amount; i > 0; i--) {
+        const previous_platform_i = side === 'left' ? 0 : platforms.length - 1
+        const previous_platform = platforms[previous_platform_i]
 
-      const new_terrain = previous_platform.terrain.clone()
-      const new_terrain_number = Number(new_terrain.name.split('_')[2]) + (side === 'left' ? -1 : 1)
-      const new_terrain_name = new_terrain.name.split('_')
+        const new_terrain = previous_platform.terrain.clone()
+        const new_terrain_number = Number(new_terrain.name.split('_')[2]) + (side === 'left' ? -1 : 1)
+        const new_terrain_name = new_terrain.name.split('_')
 
-      new_terrain_name.splice(2, 1, new_terrain_number + '')
-      new_terrain.name = new_terrain_name.join('_')
+        new_terrain_name.splice(2, 1, new_terrain_number + '')
+        new_terrain.name = new_terrain_name.join('_')
 
-      const terrain_bbox = new THREE.Box3().setFromObject(new_terrain)
+        const terrain_bbox = new THREE.Box3().setFromObject(new_terrain)
 
-      // Calculate terrain length: This is equivalent to bbox.max.x - bbox.min.x
-      const terrain_length = terrain_bbox.getSize(aux_vec3_1.current)
+        // Calculate terrain length: This is equivalent to bbox.max.x - bbox.min.x
+        const terrain_length = terrain_bbox.getSize(aux_vec3_1.current)
 
-      // The "gap" between terrains is a visual artifact, add a little offset to seal it.
-      const DISTANCE_BETWEEN_TERRAINS = terrain_length.x - 0.01
-      new_terrain.position.x += side === 'left' ? -DISTANCE_BETWEEN_TERRAINS : DISTANCE_BETWEEN_TERRAINS
+        // The "gap" between terrains is a visual artifact, add a little offset to seal it.
+        const DISTANCE_BETWEEN_TERRAINS = terrain_length.x - 0.02
+        new_terrain.position.x += side === 'left' ? -DISTANCE_BETWEEN_TERRAINS : DISTANCE_BETWEEN_TERRAINS
 
-      const previous_pipes = previous_platform.pipes
-      const negative_previous_pipe = previous_pipes[0].name.includes('-')
-      let last_pipe = side === 'left' && !negative_previous_pipe ? previous_pipes[0] : previous_pipes[3]
-      let current_pipe_number = Number(last_pipe.name.split('_')[2]) + (side === 'left' ? -1 : 1)
+        const previous_pipes = previous_platform.pipes
+        const negative_previous_pipe = previous_pipes[0].name.includes('-')
+        let last_pipe = side === 'left' && !negative_previous_pipe ? previous_pipes[0] : previous_pipes[3]
+        let current_pipe_number = Number(last_pipe.name.split('_')[2]) + (side === 'left' ? -1 : 1)
 
-      const new_pipes = previous_platform.pipes.map((pipe, i) => {
-        const new_pipe = pipe.clone()
+        const new_pipes = previous_platform.pipes.map((pipe, i) => {
+          const new_pipe = pipe.clone()
 
-        const new_pipe_name = new_pipe.name.split('_')
-        new_pipe_name.splice(2, 1, current_pipe_number + '')
-        new_pipe.name = new_pipe_name.join('_')
+          const new_pipe_name = new_pipe.name.split('_')
+          new_pipe_name.splice(2, 1, current_pipe_number + '')
+          new_pipe.name = new_pipe_name.join('_')
 
-        new_pipe.position.x = last_pipe.position.x
-        new_pipe.position.x += side === 'left' ? -DISTANCE_BETWEEN_PIPES : DISTANCE_BETWEEN_PIPES
+          new_pipe.position.x = last_pipe.position.x
+          new_pipe.position.x += side === 'left' ? -DISTANCE_BETWEEN_PIPES : DISTANCE_BETWEEN_PIPES
 
-        if (i % 2 !== 0) {
-          current_pipe_number += side === 'left' ? -1 : 1
-          last_pipe = new_pipe
+          if (i % 2 !== 0) {
+            current_pipe_number += side === 'left' ? -1 : 1
+            last_pipe = new_pipe
+          }
+
+          return new_pipe
+        }) as [Object3D, Object3D, Object3D, Object3D]
+
+        const new_platform: PlatformSlice = {
+          terrain: new_terrain,
+          pipes: new_pipes
         }
 
-        return new_pipe
-      }) as [Object3D, Object3D, Object3D, Object3D]
+        if (side === 'left') {
+          platformSlices.current.unshift(new_platform)
+        } else {
+          platformSlices.current.push(new_platform)
+        }
 
-      const new_platform: PlatformSlice = {
-        terrain: new_terrain,
-        pipes: new_pipes
-      }
-
-      if (side === 'left') {
-        platformSlices.current.unshift(new_platform)
-      } else {
-        platformSlices.current.push(new_platform)
+        new_platform_objects.push(new_terrain, ...new_pipes)
       }
 
       // =========================== Bounding Boxes =========================== //
 
-      const new_platform_objects = [new_terrain, ...new_pipes]
-      const boundingBoxesMap = addBboxes(new_platform_objects)
+      const bounding_boxes_map = addBboxes(new_platform_objects)
 
       const new_scene_children = new_platform_objects.map((object) => {
         return {
@@ -223,10 +231,12 @@ const NewYork = () => {
 
       // ================================================================ //
 
-      setBbMap({ ...bbMap, ...boundingBoxesMap })
-      setSceneChildren([...sceneChildren, ...new_scene_children])
+      return {
+        updatedBbMap: bounding_boxes_map,
+        updatedSceneChildren: new_scene_children
+      }
     },
-    [addBboxes, bbMap, sceneChildren, setBbMap]
+    [addBboxes]
   )
 
   const movePlatformToFront = useCallback(
@@ -283,6 +293,20 @@ const NewYork = () => {
     [addBboxes, setBbMap]
   )
 
+  useEffect(() => {
+    if (platformSlices.current.length !== 1 || !sceneChildren.length) return
+
+    const updatedPlatforms1 = addPlatform('left', 4)!
+    const updatedPlatforms2 = addPlatform('right', 5)!
+
+    setBbMap({ ...bbMap, ...updatedPlatforms1.updatedBbMap, ...updatedPlatforms2.updatedBbMap })
+    setSceneChildren([
+      ...updatedPlatforms1.updatedSceneChildren,
+      ...sceneChildren,
+      ...updatedPlatforms2.updatedSceneChildren
+    ])
+  }, [addPlatform, bbMap, sceneChildren, setBbMap])
+
   // GUI
   useEffect(() => {
     if (!gui) return
@@ -291,10 +315,14 @@ const NewYork = () => {
 
     const platformFunctions = {
       addPlatformLeft: () => {
-        addPlatform('left')
+        const updatedPlatforms = addPlatform('left')!
+        setBbMap({ ...bbMap, ...updatedPlatforms.updatedBbMap })
+        setSceneChildren([...updatedPlatforms.updatedSceneChildren, ...sceneChildren])
       },
       addPlatformRight: () => {
-        addPlatform('right')
+        const updatedPlatforms = addPlatform('right')!
+        setBbMap({ ...bbMap, ...updatedPlatforms.updatedBbMap })
+        setSceneChildren([...sceneChildren, ...updatedPlatforms.updatedSceneChildren])
       },
       moveLastPlatformToFront: () => {
         movePlatformToFront(platformSlices.current[0])
@@ -313,7 +341,7 @@ const NewYork = () => {
       guiLightFolder.destroy()
       platformsFolder.destroy()
     }
-  }, [dlightPosition, gui, addPlatform, movePlatformToFront])
+  }, [dlightPosition, gui, addPlatform, movePlatformToFront, setBbMap, bbMap, sceneChildren])
 
   const renderScene = () => {
     return sceneChildren.map((child) => child.element)
