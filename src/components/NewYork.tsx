@@ -12,10 +12,10 @@ import { boundingBoxesMapAtom, guiAtom } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
 
-const DISTANCE_BETWEEN_PIPES = 14
+const DISTANCE_BETWEEN_PIPES = 16.02
 const BBOX_COLLISION_COLOR = 'yellow'
 const BBOX_SENSOR_COLOR = 'crimson'
-const LOOP_TRIGGER = -180
+const LOOP_TRIGGER = -150
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
@@ -389,7 +389,9 @@ const NewYork = () => {
       directional_light_ref.current.position.copy(dlightPosition)
     }
 
-    const game_vel = 0.8 * delta
+    const safeDelta = Math.min(delta, 0.01)
+
+    const game_vel = 3 * safeDelta
 
     for (const platform of platformSlices.current) {
       if (!bbMap[platform.terrain.name]) continue
@@ -403,6 +405,10 @@ const NewYork = () => {
       })
 
       updateSensors(platform.pipes)
+
+      if (platform.terrain.position.x < LOOP_TRIGGER) {
+        movePlatformToFront(platform)
+      }
     }
   })
 
