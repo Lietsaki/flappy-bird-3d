@@ -7,5 +7,6 @@ const showHelpersAtom = atom(SHOW_HELPERS)
 
 const guiAtom = atom(SHOW_HELPERS ? new dat.GUI({ closeFolders: false }) : null)
 const boundingBoxesMapAtom = atom<BoundingBoxesMap | null>(null)
+const playingAtom = atom(false)
 
-export { showHelpersAtom, guiAtom, boundingBoxesMapAtom }
+export { showHelpersAtom, guiAtom, boundingBoxesMapAtom, playingAtom }

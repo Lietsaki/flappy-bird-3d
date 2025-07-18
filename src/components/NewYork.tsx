@@ -103,7 +103,7 @@ const NewYork = () => {
     [scene, showHelpers]
   )
 
-  // Populate scene children & setup first slice
+  // 1) Populate scene children & setup first slice
   useEffect(() => {
     // SET MIN FILTER IN THE TEXTURES THAT REQUIRE IT
     const NYC_material = model.materials.nyc_material as THREE.MeshStandardMaterial
@@ -293,6 +293,7 @@ const NewYork = () => {
     [addBboxes, setBbMap]
   )
 
+  // 2) Setup all slices
   useEffect(() => {
     if (platformSlices.current.length !== 1 || !sceneChildren.length) return
 
@@ -307,7 +308,7 @@ const NewYork = () => {
     ])
   }, [addPlatform, bbMap, sceneChildren, setBbMap])
 
-  // GUI
+  // 3) GUI
   useEffect(() => {
     if (!gui) return
 

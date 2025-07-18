@@ -4,6 +4,7 @@ import { OrthographicCamera } from '@react-three/drei'
 
 import InteractUI from './components/UI/InteractUI'
 import NewYork from './components/NewYork'
+import Bird from './components/Bird'
 import DebugGui from './components/debug/DebugGui'
 
 const App = () => {
@@ -20,6 +21,7 @@ const App = () => {
 
         <DebugGui />
         <NewYork />
+        <Bird />
       </Canvas>
 
       <InteractUI />
