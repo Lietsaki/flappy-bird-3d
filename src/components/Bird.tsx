@@ -26,10 +26,12 @@ const Bird = () => {
     if (sceneChild) return
 
     const bird_rig = bird_model.scene.children.find((child) => child.name === 'bird_rig')!
-    bird_body.current = bird_rig
+    const bird_bbox = bird_model.scene.children.find((child) => child.name === 'bird_bbox')!
+
+    bird_body.current = bird_bbox
 
     const INITIAL_POSITION = new THREE.Vector3(-30, 18, 13)
-    bird_rig.position.copy(INITIAL_POSITION)
+    bird_body.current.position.copy(INITIAL_POSITION)
 
     // NOTE: When rigs are added to a primitive, they're "taken" out of their original model.
     // So, if you log bird_model.scene.children you'll see that bird_rig is missing.
@@ -49,7 +51,8 @@ const Bird = () => {
   }, [bird_model, sceneChild, animations, showHelpers, scene])
 
   useFrame(() => {
-    if (!sceneChild) return
+    if (!sceneChild || !bird_body.current) return
+    sceneChild.object.position.copy(bird_body.current.position)
   })
 
   if (!sceneChild) return null
