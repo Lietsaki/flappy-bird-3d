@@ -16,6 +16,7 @@ const DISTANCE_BETWEEN_PIPES = 16.02
 const BBOX_COLLISION_COLOR = 'yellow'
 const BBOX_SENSOR_COLOR = 'crimson'
 const LOOP_TRIGGER = -150
+const TERRAINS_OFFSET = 0.04
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
@@ -178,7 +179,7 @@ const NewYork = () => {
         const terrain_length = terrain_bbox.getSize(aux_vec3_1.current)
 
         // The "gap" between terrains is a visual artifact, add a little offset to seal it.
-        const DISTANCE_BETWEEN_TERRAINS = terrain_length.x - 0.02
+        const DISTANCE_BETWEEN_TERRAINS = terrain_length.x - TERRAINS_OFFSET
         new_terrain.position.x += side === 'left' ? -DISTANCE_BETWEEN_TERRAINS : DISTANCE_BETWEEN_TERRAINS
 
         const previous_pipes = previous_platform.pipes
@@ -245,7 +246,7 @@ const NewYork = () => {
 
       const last_platform = platformSlices.current[platformSlices.current.length - 1]
       const last_terrain_bbox = new THREE.Box3().setFromObject(last_platform.terrain)
-      const distance_between_terrains = last_terrain_bbox.getSize(aux_vec3_1.current).x - 0.01
+      const distance_between_terrains = last_terrain_bbox.getSize(aux_vec3_1.current).x - TERRAINS_OFFSET
 
       platform.terrain.position.x = last_platform.terrain.position.x + distance_between_terrains
       platform.terrain.name = last_platform.terrain.name
