@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/drei": "^10.3.0",
     "@react-three/fiber": "^9.1.4",
+    "gsap": "^3.13.0",
     "jotai": "^2.12.5",
     "lil-gui": "^0.20.0",
     "mitt": "^3.0.1",

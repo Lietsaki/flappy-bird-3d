@@ -5,6 +5,7 @@ import type { SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
 import { playingAtom, showHelpersAtom } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
+import gsap from 'gsap'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
@@ -41,7 +42,7 @@ const Bird = () => {
 
     bird_body.current = bird_bbox
 
-    const INITIAL_POSITION = new THREE.Vector3(-30, 18, 13)
+    const INITIAL_POSITION = new THREE.Vector3(-30, GLIDING_ANIMATION_BOTTOM, 13)
     bird_body.current.position.copy(INITIAL_POSITION)
 
     // NOTE: When rigs are added to a primitive, they're "taken" out of their original model.
@@ -63,30 +64,32 @@ const Bird = () => {
     }
   }, [bird_model, sceneChild, animations, showHelpers, scene])
 
+  useEffect(() => {
+    if (!bird_body.current) return
+
+    let tween: gsap.core.Tween
+
+    if (!playing) {
+      tween = gsap.to(bird_body.current.position, {
+        y: GLIDING_ANIMATION_TOP,
+        duration: 0.5,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1
+      })
+    }
+
+    return () => {
+      if (tween) tween.kill()
+    }
+  })
+
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
     sceneChild.object.position.copy(bird_body.current.position)
     collision_bbox.current.setFromObject(bird_body.current)
 
     const safeDelta = Math.min(delta, 0.01)
-
-    if (!playing) {
-      const gliding_vel = 0.6
-
-      if (gliding_up.current) {
-        bird_body.current.position.y += gliding_vel * safeDelta
-
-        if (bird_body.current.position.y >= GLIDING_ANIMATION_TOP) {
-          gliding_up.current = false
-        }
-      } else {
-        bird_body.current.position.y -= gliding_vel * safeDelta
-
-        if (bird_body.current.position.y <= GLIDING_ANIMATION_BOTTOM) {
-          gliding_up.current = true
-        }
-      }
-    }
   })
 
   if (!sceneChild) return null
