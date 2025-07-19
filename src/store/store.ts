@@ -8,5 +8,8 @@ const showHelpersAtom = atom(SHOW_HELPERS)
 const guiAtom = atom(SHOW_HELPERS ? new dat.GUI({ closeFolders: false }) : null)
 const boundingBoxesMapAtom = atom<BoundingBoxesMap | null>(null)
 const playingAtom = atom(false)
+const gameJustEndedAtom = atom(false)
 
-export { showHelpersAtom, guiAtom, boundingBoxesMapAtom, playingAtom }
+const scoreAtom = atom(0)
+
+export { showHelpersAtom, guiAtom, boundingBoxesMapAtom, playingAtom, gameJustEndedAtom, scoreAtom }

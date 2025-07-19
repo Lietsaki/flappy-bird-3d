@@ -3,12 +3,19 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
-import { playingAtom, showHelpersAtom } from '../store/store'
+import {
+  boundingBoxesMapAtom,
+  gameJustEndedAtom,
+  playingAtom,
+  scoreAtom,
+  showHelpersAtom
+} from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
+const FRAME_GRAVITY = 0.1
 
 const BIRD_ANIMATION_SPEEDMAP: { [key: string]: number } = {
   bird_flap: 1,
@@ -27,10 +34,14 @@ const Bird = () => {
   const bird_body = useRef<THREE.Object3D | null>(null)
   const bird_helper = useRef<THREE.Box3Helper | null>(null)
   const collision_bbox = useRef(new THREE.Box3())
-  const gliding_up = useRef(true)
+  const jump_velocity = useRef(new THREE.Vector3())
 
   const [showHelpers] = useAtom(showHelpersAtom)
-  const [playing] = useAtom(playingAtom)
+  const [bbMap] = useAtom(boundingBoxesMapAtom)
+
+  const [playing, setPlaying] = useAtom(playingAtom)
+  const [gameJustEnded, setGameJustEnded] = useAtom(gameJustEndedAtom)
+  const [score, setScore] = useAtom(scoreAtom)
 
   const { scene } = useThree()
 
@@ -42,7 +53,7 @@ const Bird = () => {
 
     bird_body.current = bird_bbox
 
-    const INITIAL_POSITION = new THREE.Vector3(-30, GLIDING_ANIMATION_BOTTOM, 13)
+    const INITIAL_POSITION = new THREE.Vector3(-30, GLIDING_ANIMATION_BOTTOM, 13.5)
     bird_body.current.position.copy(INITIAL_POSITION)
 
     // NOTE: When rigs are added to a primitive, they're "taken" out of their original model.
@@ -66,10 +77,9 @@ const Bird = () => {
 
   useEffect(() => {
     if (!bird_body.current) return
-
     let tween: gsap.core.Tween
 
-    if (!playing) {
+    if (!playing && !gameJustEnded) {
       tween = gsap.to(bird_body.current.position, {
         y: GLIDING_ANIMATION_TOP,
         duration: 0.5,
@@ -82,14 +92,47 @@ const Bird = () => {
     return () => {
       if (tween) tween.kill()
     }
-  })
+  }, [gameJustEnded, playing])
 
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
-    sceneChild.object.position.copy(bird_body.current.position)
-    collision_bbox.current.setFromObject(bird_body.current)
-
     const safeDelta = Math.min(delta, 0.01)
+
+    sceneChild.object.position.copy(bird_body.current.position)
+    const updated_bird_bbox = collision_bbox.current.setFromObject(bird_body.current)
+
+    if (playing) {
+      const fasterDeltaForGravity = 1
+
+      // 1) Apply gravity to the bird
+      bird_body.current.position.y -= FRAME_GRAVITY * fasterDeltaForGravity
+
+      // 2) Check for collisions
+      for (const bb_key in bbMap) {
+        const { type, bbox, name } = bbMap[bb_key]
+
+        const intersection = updated_bird_bbox.intersectsBox(bbox)
+
+        if (intersection) {
+          if (type === 'collision') {
+            setPlaying(false)
+            setGameJustEnded(true)
+          } else if (type === 'sensor') {
+            setScore(score + 1)
+          }
+        }
+      }
+    }
+
+    // 3) Decimate jump power with gravity
+    if (jump_velocity.current.y > 0) {
+      jump_velocity.current.y -= FRAME_GRAVITY * safeDelta
+    } else {
+      jump_velocity.current.y = 0
+    }
+
+    // 4) Apply jump velocity
+    bird_body.current.position.y += jump_velocity.current.y * safeDelta
   })
 
   if (!sceneChild) return null

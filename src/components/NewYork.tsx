@@ -8,7 +8,7 @@ import { Object3D } from 'three'
 import { useHelper } from '@react-three/drei'
 
 import { useAtom } from 'jotai'
-import { boundingBoxesMapAtom, guiAtom } from '../store/store'
+import { boundingBoxesMapAtom, guiAtom, playingAtom } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
 
@@ -27,6 +27,7 @@ const NewYork = () => {
   const [gui] = useAtom(guiAtom)
   const [showHelpers] = useAtom(showHelpersAtom)
   const [bbMap, setBbMap] = useAtom(boundingBoxesMapAtom)
+  const [, setPlaying] = useAtom(playingAtom)
 
   const { scene } = useThree()
 
@@ -328,11 +329,15 @@ const NewYork = () => {
       },
       moveLastPlatformToFront: () => {
         movePlatformToFront(platformSlices.current[0])
+      },
+      startPlaying: () => {
+        setPlaying(true)
       }
     }
     platformsFolder.add(platformFunctions, 'addPlatformLeft')
     platformsFolder.add(platformFunctions, 'addPlatformRight')
     platformsFolder.add(platformFunctions, 'moveLastPlatformToFront')
+    platformsFolder.add(platformFunctions, 'startPlaying')
 
     const guiLightFolder = gui.addFolder('Directional Light')
     guiLightFolder.add(dlightPosition, 'x').min(-80).max(80).step(0.01).name('positionX')
@@ -343,7 +348,7 @@ const NewYork = () => {
       guiLightFolder.destroy()
       platformsFolder.destroy()
     }
-  }, [dlightPosition, gui, addPlatform, movePlatformToFront, setBbMap, bbMap, sceneChildren])
+  }, [dlightPosition, gui, addPlatform, movePlatformToFront, setBbMap, bbMap, sceneChildren, setPlaying])
 
   const renderScene = () => {
     return sceneChildren.map((child) => child.element)
