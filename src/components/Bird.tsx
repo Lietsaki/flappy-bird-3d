@@ -1,5 +1,5 @@
 import { useGLTF, useAnimations } from '@react-three/drei'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
@@ -15,9 +15,10 @@ import gsap from 'gsap'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
-const FRAME_GRAVITY = 7
+const FRAME_GRAVITY = 8
 const JUMP_DECIMATE_POWER = 50 // how fast we are pulled down
 const JUMP_POWER = 28 // how fast we go up
+const FALLING_BIRD_ROTATION_LIMIT = -1.6
 
 const BIRD_ANIMATION_SPEEDMAP: { [key: string]: number } = {
   bird_flap: 1,
@@ -37,6 +38,8 @@ const Bird = () => {
   const bird_helper = useRef<THREE.Box3Helper | null>(null)
   const collision_bbox = useRef(new THREE.Box3())
   const jump_velocity = useRef(new THREE.Vector3())
+  const just_flapped_timeout = useRef<NodeJS.Timeout | null>(null)
+  const rotation_tween = useRef<gsap.core.Tween | null>(null)
 
   const [showHelpers] = useAtom(showHelpersAtom)
   const [bbMap] = useAtom(boundingBoxesMapAtom)
@@ -47,6 +50,21 @@ const Bird = () => {
 
   const { scene } = useThree()
 
+  const wingFlap = useCallback(() => {
+    if (!playing || !sceneChild) return
+
+    jump_velocity.current.y = JUMP_POWER
+    sceneChild.object.rotation.z = 0.5
+
+    if (rotation_tween.current) rotation_tween.current.pause()
+    if (just_flapped_timeout.current) clearTimeout(just_flapped_timeout.current)
+
+    just_flapped_timeout.current = setTimeout(() => {
+      just_flapped_timeout.current = null
+    }, 500)
+  }, [playing, sceneChild])
+
+  // 1) Load model and start idle animation
   useEffect(() => {
     if (sceneChild) return
 
@@ -77,19 +95,24 @@ const Bird = () => {
     }
   }, [bird_model, sceneChild, animations, showHelpers, scene])
 
+  // 2) Keyboard and Mouse event listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code.toLowerCase() === 'space' && playing) {
-        jump_velocity.current.y = JUMP_POWER
-      }
+      if (e.code.toLowerCase() === 'space') wingFlap()
+    }
+
+    const handleMousedown = () => {
+      wingFlap()
     }
 
     document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('mousedown', handleMousedown)
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mousedown', handleMousedown)
     }
-  }, [playing])
+  }, [playing, sceneChild, wingFlap])
 
   useEffect(() => {
     if (!bird_body.current) return
@@ -121,7 +144,22 @@ const Bird = () => {
       // 1) Apply gravity to the bird
       bird_body.current.position.y -= FRAME_GRAVITY * safeDelta
 
-      // 2) Check for collisions
+      // 2) Rotate the bird forward as it falls
+      if (sceneChild.object.rotation.z > FALLING_BIRD_ROTATION_LIMIT && !just_flapped_timeout.current) {
+        if (!rotation_tween.current) {
+          rotation_tween.current = gsap.to(sceneChild.object.rotation, {
+            z: FALLING_BIRD_ROTATION_LIMIT,
+            duration: 0.5,
+            ease: 'sine.in',
+            yoyo: true,
+            repeat: 0
+          })
+        } else if (!rotation_tween.current.isActive()) {
+          rotation_tween.current.invalidate().restart()
+        }
+      }
+
+      // 3) Check for collisions
       for (const bb_key in bbMap) {
         const { type, bbox, name } = bbMap[bb_key]
 
@@ -137,14 +175,14 @@ const Bird = () => {
         }
       }
 
-      // 3) Decimate jump power with gravity
+      // 4) Decimate jump power with gravity
       if (jump_velocity.current.y > 0) {
         jump_velocity.current.y -= JUMP_DECIMATE_POWER * safeDelta
       } else {
         jump_velocity.current.y = 0
       }
 
-      // 4) Apply jump velocity
+      // 5) Apply jump velocity
       bird_body.current.position.y += jump_velocity.current.y * safeDelta
     }
   })
