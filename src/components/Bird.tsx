@@ -15,7 +15,9 @@ import gsap from 'gsap'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
-const FRAME_GRAVITY = 0.1
+const FRAME_GRAVITY = 7
+const JUMP_DECIMATE_POWER = 50 // how fast we are pulled down
+const JUMP_POWER = 28 // how fast we go up
 
 const BIRD_ANIMATION_SPEEDMAP: { [key: string]: number } = {
   bird_flap: 1,
@@ -76,6 +78,20 @@ const Bird = () => {
   }, [bird_model, sceneChild, animations, showHelpers, scene])
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code.toLowerCase() === 'space' && playing) {
+        jump_velocity.current.y = JUMP_POWER
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [playing])
+
+  useEffect(() => {
     if (!bird_body.current) return
     let tween: gsap.core.Tween
 
@@ -102,10 +118,8 @@ const Bird = () => {
     const updated_bird_bbox = collision_bbox.current.setFromObject(bird_body.current)
 
     if (playing) {
-      const fasterDeltaForGravity = 1
-
       // 1) Apply gravity to the bird
-      bird_body.current.position.y -= FRAME_GRAVITY * fasterDeltaForGravity
+      bird_body.current.position.y -= FRAME_GRAVITY * safeDelta
 
       // 2) Check for collisions
       for (const bb_key in bbMap) {
@@ -122,17 +136,17 @@ const Bird = () => {
           }
         }
       }
-    }
 
-    // 3) Decimate jump power with gravity
-    if (jump_velocity.current.y > 0) {
-      jump_velocity.current.y -= FRAME_GRAVITY * safeDelta
-    } else {
-      jump_velocity.current.y = 0
-    }
+      // 3) Decimate jump power with gravity
+      if (jump_velocity.current.y > 0) {
+        jump_velocity.current.y -= JUMP_DECIMATE_POWER * safeDelta
+      } else {
+        jump_velocity.current.y = 0
+      }
 
-    // 4) Apply jump velocity
-    bird_body.current.position.y += jump_velocity.current.y * safeDelta
+      // 4) Apply jump velocity
+      bird_body.current.position.y += jump_velocity.current.y * safeDelta
+    }
   })
 
   if (!sceneChild) return null

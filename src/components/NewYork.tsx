@@ -331,7 +331,9 @@ const NewYork = () => {
         movePlatformToFront(platformSlices.current[0])
       },
       startPlaying: () => {
-        setPlaying(true)
+        setTimeout(() => {
+          setPlaying(true)
+        }, 400)
       }
     }
     platformsFolder.add(platformFunctions, 'addPlatformLeft')
