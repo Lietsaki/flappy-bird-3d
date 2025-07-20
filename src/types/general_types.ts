@@ -17,3 +17,5 @@ export type BoundingBoxObj = { name: string; bbox: Box3; type: BoundingBoxType }
 export interface BoundingBoxesMap {
   [key: string]: BoundingBoxObj
 }
+
+export type BirdAnimationName = 'bird_flap' | 'bird_hurt_1' | 'bird_falling' | 'bird_idle'
