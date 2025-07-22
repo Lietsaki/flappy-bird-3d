@@ -1,2 +1,23 @@
 // VARIABLES
 $sky_bg: #2098f8;
+
+$white_text: #ffffff;
+$black_text: #000000;
+
+@font-face {
+  font-family: 'nds';
+  src: url('/fonts/nds.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: '04B';
+  src: url('/fonts/04B_19.ttf') format('truetype');
+}
+
+@mixin ds-font {
+  font-family: 'nds', sans-serif;
+}
+
+@mixin bold-font {
+  font-family: '04B', sans-serif;
+}
