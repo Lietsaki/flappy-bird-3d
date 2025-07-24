@@ -7,9 +7,9 @@ type ButtonProps = {
   onClick: () => void
 }
 
-const Button = ({ text }: ButtonProps) => {
+const Button = ({ text, onClick }: ButtonProps) => {
   return (
-    <button className={btn_bg}>
+    <button className={btn_bg} onClick={onClick}>
       <div className={btn_content}>
         <span>{text}</span>
       </div>
