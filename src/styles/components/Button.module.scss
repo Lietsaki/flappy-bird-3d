@@ -1,0 +1,30 @@
+.btn_bg {
+  @include ds-font;
+  pointer-events: auto;
+  padding: 4px 4px 7px 4px;
+  background-color: $brown;
+  border: none;
+  width: max-content;
+  min-width: 220px;
+
+  .btn_content {
+    background-color: $orange;
+    border: 4px solid $white;
+
+    color: $white;
+    letter-spacing: 3px;
+    font-size: 34px;
+    font-weight: 600;
+    padding: 0px 10px;
+    text-shadow: 2px 2px 0px $dark_orange;
+  }
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &:active {
+    transform: scale(0.98);
+    transform-origin: bottom;
+  }
+}
