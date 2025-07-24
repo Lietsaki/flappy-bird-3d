@@ -25,3 +25,16 @@ $brown: #553000;
 @mixin bold-font {
   font-family: '04B', sans-serif;
 }
+
+// KEYFRAMES
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

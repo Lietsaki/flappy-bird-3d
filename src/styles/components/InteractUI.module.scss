@@ -48,7 +48,23 @@
   }
 
   .start_message {
-    grid-column: 2 / 3;
+    grid-column: 1 /4;
     grid-row: 3 / 4;
+
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    margin-bottom: 8vh;
+
+    span {
+      @include ds-font;
+      color: $white;
+      letter-spacing: 4px;
+      font-size: 40px;
+      font-weight: 600;
+      padding: 0px 10px;
+      text-shadow: 2px 2px 0px $dark_orange;
+      animation: blink 2s infinite ease-in-out;
+    }
   }
 }
