@@ -21,4 +21,4 @@ export interface BoundingBoxesMap {
 
 export type BirdAnimationName = 'bird_flap' | 'bird_hurt_1' | 'bird_falling' | 'bird_idle'
 
-export type PipesState = 'idle' | 'rearranging' | 'playing'
+export type PipesState = 'idle' | 'opening' | 'rearranging' | 'playing'

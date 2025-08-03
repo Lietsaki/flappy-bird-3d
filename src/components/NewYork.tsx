@@ -17,6 +17,7 @@ import {
 } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
+import { getRandomNumber } from '../helpers/helper_functions'
 
 const TOTAL_PLATFORMS = 6
 const DISTANCE_BETWEEN_PIPES = 16.02
@@ -42,6 +43,8 @@ const NewYork = () => {
   const { scene } = useThree()
 
   const aux_vec3_1 = useRef(new THREE.Vector3())
+  const base_bottom_pipe_y = useRef(0)
+  const base_top_pipe_y = useRef(0)
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
 
   // This typing error doesn't affect us
@@ -140,6 +143,9 @@ const NewYork = () => {
     first_top_pipe.rotation.z = Math.PI
     first_top_pipe.rotation.y = Math.PI
 
+    base_bottom_pipe_y.current = first_pipe.position.y
+    base_top_pipe_y.current = first_top_pipe.position.y
+
     const third_pipe = first_pipe.clone()
     third_pipe.name = 'pipe_bottom_1'
     third_pipe.position.x += DISTANCE_BETWEEN_PIPES
@@ -167,6 +173,27 @@ const NewYork = () => {
     setBbMap(boundingBoxesMap)
     setSceneChildren(processedSceneChildren)
   }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes])
+
+  const addOffsetsToPlatform = (platform: PlatformSlice) => {
+    const pair_1_offset = getRandomNumber(4, 6)
+    const negative_1 = Math.random() > 0.5
+
+    const pair_2_offset = getRandomNumber(4, 6)
+    let negative_2 = Math.random() > 0.5
+
+    const MIN_OFFSET = 1
+
+    while (Math.abs(pair_2_offset - pair_1_offset) < MIN_OFFSET && negative_1 === negative_2) {
+      negative_2 = !negative_2
+    }
+
+    platform.pipe_y_targets = [
+      base_bottom_pipe_y.current + (negative_1 ? -pair_1_offset : pair_1_offset),
+      base_top_pipe_y.current + (negative_1 ? -pair_1_offset : pair_1_offset),
+      base_bottom_pipe_y.current + (negative_2 ? -pair_2_offset : pair_2_offset),
+      base_top_pipe_y.current + (negative_2 ? -pair_2_offset : pair_2_offset)
+    ]
+  }
 
   const addPlatform = useCallback(
     (amount = 1): { updatedBbMap: BoundingBoxesMap; updatedSceneChildren: SceneChild[] } | null => {
@@ -267,6 +294,10 @@ const NewYork = () => {
         }
       }
 
+      if (pipesState === 'playing') {
+        addOffsetsToPlatform(platform)
+      }
+
       platformSlices.current = platformSlices.current.filter((platformSlice) => platformSlice !== platform)
       platformSlices.current.push(platform)
 
@@ -277,7 +308,7 @@ const NewYork = () => {
       const boundingBoxesMap = addBboxes(platform_slice_objects)
       setBbMap(boundingBoxesMap)
     },
-    [addBboxes, setBbMap]
+    [addBboxes, pipesState, setBbMap]
   )
 
   // 2) Setup all slices
@@ -289,7 +320,7 @@ const NewYork = () => {
     setSceneChildren([...sceneChildren, ...updatedPlatforms2.updatedSceneChildren])
   }, [addPlatform, bbMap, sceneChildren, setBbMap])
 
-  // 3) Trigger pipes rearranging when we start playing
+  // 3) Trigger pipes opening when we start playing
   useEffect(() => {
     if (!playing || !platformSlices.current.length || pipesState !== 'idle') return
 
@@ -316,10 +347,34 @@ const NewYork = () => {
       penultimate_platform_i--
     }
 
-    setPipesState('rearranging')
+    setPipesState('opening')
   }, [lastPassedPipes, pipesState, playing, setPipesState])
 
-  // 3) GUI
+  // 4) Set pipes playing offset
+  useEffect(() => {
+    if (
+      !playing ||
+      !platformSlices.current.length ||
+      platformSlices.current.some((platform) => platform.pipe_y_targets) ||
+      pipesState !== 'rearranging'
+    ) {
+      return
+    }
+
+    const passed_pipes_number = lastPassedPipes.split('_')[2]
+    let next_platform_i =
+      platformSlices.current.findIndex((platform) => {
+        return platform.pipes.find((pipe) => pipe.name.includes(passed_pipes_number))
+      }) + 1
+
+    for (; next_platform_i < platformSlices.current.length; next_platform_i++) {
+      addOffsetsToPlatform(platformSlices.current[next_platform_i])
+    }
+
+    setPipesState('playing')
+  }, [lastPassedPipes, pipesState, playing, setPipesState])
+
+  // 5) GUI
   useEffect(() => {
     if (!gui) return
 
@@ -394,14 +449,14 @@ const NewYork = () => {
     }
   }
 
-  const rearrangeIdlePipe = (
+  const rearrangePipe = (
     platform: PlatformSlice,
     pipe: Object3D,
     pipe_i: number,
     platform_i: number,
     pipes_y_vel: number
   ) => {
-    if (!platform.pipe_y_targets?.[pipe_i] || pipesState !== 'rearranging') return
+    if (!platform.pipe_y_targets?.[pipe_i]) return
 
     const pipe_y_target = platform.pipe_y_targets[pipe_i]
     const pipe_y = pipe.position.y
@@ -418,7 +473,7 @@ const NewYork = () => {
 
         // Set Y targets in the next pipes to get a "waterfall" effect when
         // the current pipe is about to reach its target.
-        if (pipe_y > pipe_y_target * 0.75) {
+        if (pipe_y > pipe_y_target * 0.75 && pipesState === 'opening') {
           const next_platform = platformSlices.current[platform_i + 1]
 
           if (platform.pipe_y_targets?.[2] === 0) {
@@ -456,7 +511,7 @@ const NewYork = () => {
 
     const safeDelta = Math.min(delta, 0.01)
 
-    const game_vel = 3 * safeDelta
+    const game_vel = (playing ? 5 : 3) * safeDelta
     const pipes_y_vel = 40 * safeDelta
 
     for (let i = 0; i < platformSlices.current.length; i++) {
@@ -469,7 +524,7 @@ const NewYork = () => {
       platform.pipes.forEach((pipe, pipe_i) => {
         pipe.position.x -= game_vel
         updateBboxes(pipe)
-        rearrangeIdlePipe(platform, pipe, pipe_i, i, pipes_y_vel)
+        rearrangePipe(platform, pipe, pipe_i, i, pipes_y_vel)
       })
 
       updateSensors(platform.pipes)
@@ -479,11 +534,8 @@ const NewYork = () => {
       }
     }
 
-    if (
-      pipesState === 'rearranging' &&
-      platformSlices.current.every((platform) => !platform.pipe_y_targets)
-    ) {
-      setPipesState('playing')
+    if (pipesState === 'opening' && platformSlices.current.every((platform) => !platform.pipe_y_targets)) {
+      setPipesState('rearranging')
     }
   })
 
