@@ -6,6 +6,8 @@ import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
   gameJustEndedAtom,
+  lastPassedPipesAtom,
+  pipesStateAtom,
   playingAtom,
   scoreAtom,
   showHelpersAtom
@@ -44,6 +46,8 @@ const Bird = () => {
   const [showHelpers] = useAtom(showHelpersAtom)
   const [bbMap] = useAtom(boundingBoxesMapAtom)
 
+  const [pipesState] = useAtom(pipesStateAtom)
+  const [, setLastPassedPipes] = useAtom(lastPassedPipesAtom)
   const [playing, setPlaying] = useAtom(playingAtom)
   const [gameJustEnded, setGameJustEnded] = useAtom(gameJustEndedAtom)
   const [score, setScore] = useAtom(scoreAtom)
@@ -72,7 +76,8 @@ const Bird = () => {
     [currentAction, animations]
   )
   const wingFlap = useCallback(() => {
-    if (!playing || !sceneChild) return
+    if (!sceneChild) return
+    if (!playing) setPlaying(true)
 
     jump_velocity.current.y = JUMP_POWER
     sceneChild.object.rotation.z = 0.5
@@ -84,7 +89,7 @@ const Bird = () => {
     just_flapped_timeout.current = setTimeout(() => {
       just_flapped_timeout.current = null
     }, 500)
-  }, [changeAction, playing, sceneChild])
+  }, [changeAction, playing, sceneChild, setPlaying])
 
   // 1) Load model and start idle animation
   useEffect(() => {
@@ -166,11 +171,32 @@ const Bird = () => {
     sceneChild.object.position.copy(bird_body.current.position)
     const updated_bird_bbox = collision_bbox.current.setFromObject(bird_body.current)
 
+    // 1) Check for collisions
+    for (const bb_key in bbMap) {
+      const { type, bbox, name } = bbMap[bb_key]
+
+      const intersection = updated_bird_bbox.intersectsBox(bbox)
+
+      if (intersection) {
+        if (type === 'collision' && playing && pipesState === 'playing') {
+          setPlaying(false)
+          setGameJustEnded(true)
+          changeAction('bird_hurt_1', false, 0.001)
+        } else if (type === 'sensor') {
+          setLastPassedPipes(name)
+
+          if (playing && pipesState === 'playing') {
+            setScore(score + 1)
+          }
+        }
+      }
+    }
+
     if (playing) {
-      // 1) Apply gravity to the bird
+      // 2) Apply gravity to the bird
       bird_body.current.position.y -= FRAME_GRAVITY * safeDelta
 
-      // 2) Rotate the bird forward as it falls. Also, animate it after a certain threshold
+      // 3) Rotate the bird forward as it falls. Also, animate it after a certain threshold
       if (sceneChild.object.rotation.z > FALLING_BIRD_ROTATION_LIMIT && !just_flapped_timeout.current) {
         if (sceneChild.object.rotation.z < FALLING_BIRD_ROTATION_LIMIT + 0.6) {
           changeAction('bird_falling')
@@ -186,23 +212,6 @@ const Bird = () => {
           })
         } else if (!rotation_tween.current.isActive()) {
           rotation_tween.current.invalidate().restart()
-        }
-      }
-
-      // 3) Check for collisions
-      for (const bb_key in bbMap) {
-        const { type, bbox } = bbMap[bb_key]
-
-        const intersection = updated_bird_bbox.intersectsBox(bbox)
-
-        if (intersection) {
-          if (type === 'collision') {
-            setPlaying(false)
-            setGameJustEnded(true)
-            changeAction('bird_hurt_1', false, 0.001)
-          } else if (type === 'sensor') {
-            setScore(score + 1)
-          }
         }
       }
 

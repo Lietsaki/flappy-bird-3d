@@ -8,11 +8,19 @@ import { Object3D } from 'three'
 import { useHelper } from '@react-three/drei'
 
 import { useAtom } from 'jotai'
-import { boundingBoxesMapAtom, guiAtom, playingAtom } from '../store/store'
+import {
+  boundingBoxesMapAtom,
+  guiAtom,
+  lastPassedPipesAtom,
+  pipesStateAtom,
+  playingAtom
+} from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
 
+const TOTAL_PLATFORMS = 6
 const DISTANCE_BETWEEN_PIPES = 16.02
+const PIPES_Y_OFFSET = 20
 const BBOX_COLLISION_COLOR = 'yellow'
 const BBOX_SENSOR_COLOR = 'crimson'
 const LOOP_TRIGGER = -150
@@ -27,7 +35,9 @@ const NewYork = () => {
   const [gui] = useAtom(guiAtom)
   const [showHelpers] = useAtom(showHelpersAtom)
   const [bbMap, setBbMap] = useAtom(boundingBoxesMapAtom)
-  const [, setPlaying] = useAtom(playingAtom)
+  const [playing, setPlaying] = useAtom(playingAtom)
+  const [lastPassedPipes] = useAtom(lastPassedPipesAtom)
+  const [pipesState, setPipesState] = useAtom(pipesStateAtom)
 
   const { scene } = useThree()
 
@@ -274,10 +284,40 @@ const NewYork = () => {
   useEffect(() => {
     if (platformSlices.current.length !== 1 || !sceneChildren.length) return
 
-    const updatedPlatforms2 = addPlatform(5)!
+    const updatedPlatforms2 = addPlatform(TOTAL_PLATFORMS - 1)!
     setBbMap({ ...bbMap, ...updatedPlatforms2.updatedBbMap })
     setSceneChildren([...sceneChildren, ...updatedPlatforms2.updatedSceneChildren])
   }, [addPlatform, bbMap, sceneChildren, setBbMap])
+
+  // 3) Trigger pipes rearranging when we start playing
+  useEffect(() => {
+    if (!playing || !platformSlices.current.length || pipesState !== 'idle') return
+
+    // Find the index of the platform with the last passsed pipes, then use the one before.
+    // This is because we want to see the "waterfall" effect starting in the last passed pipe
+    // It's too abrupt to see it start in the pipe following the last one we passed.
+    const passed_pipes_number = lastPassedPipes.split('_')[2]
+    let penultimate_platform_i =
+      platformSlices.current.findIndex((platform) => {
+        return platform.pipes.find((pipe) => pipe.name.includes(passed_pipes_number))
+      }) - 1
+
+    // Add a target Y to all pipes before, the following pipes will
+    // receive their target in rearrangeIdlePipe.
+    while (penultimate_platform_i >= 0) {
+      const pipes = platformSlices.current[penultimate_platform_i].pipes
+      platformSlices.current[penultimate_platform_i].pipe_y_targets = [
+        pipes[0].position.y - PIPES_Y_OFFSET,
+        pipes[1].position.y + PIPES_Y_OFFSET,
+        pipes[2].position.y - PIPES_Y_OFFSET,
+        pipes[3].position.y + PIPES_Y_OFFSET
+      ]
+
+      penultimate_platform_i--
+    }
+
+    setPipesState('rearranging')
+  }, [lastPassedPipes, pipesState, playing, setPipesState])
 
   // 3) GUI
   useEffect(() => {
@@ -354,6 +394,59 @@ const NewYork = () => {
     }
   }
 
+  const rearrangeIdlePipe = (
+    platform: PlatformSlice,
+    pipe: Object3D,
+    pipe_i: number,
+    platform_i: number,
+    pipes_y_vel: number
+  ) => {
+    if (!platform.pipe_y_targets?.[pipe_i] || pipesState !== 'rearranging') return
+
+    const pipe_y_target = platform.pipe_y_targets[pipe_i]
+    const pipe_y = pipe.position.y
+    const pipe_target_offset = 0.2
+
+    const reached_target =
+      pipe_y_target > pipe.position.y
+        ? pipe.position.y >= pipe_y_target - pipe_target_offset
+        : pipe.position.y <= pipe_y_target + pipe_target_offset
+
+    if (pipe_y_target && !reached_target) {
+      if (pipe_y_target > pipe_y) {
+        pipe.position.y += pipes_y_vel
+
+        // Set Y targets in the next pipes to get a "waterfall" effect when
+        // the current pipe is about to reach its target.
+        if (pipe_y > pipe_y_target * 0.75) {
+          const next_platform = platformSlices.current[platform_i + 1]
+
+          if (platform.pipe_y_targets?.[2] === 0) {
+            platform.pipe_y_targets[2] = platform.pipes[2].position.y - PIPES_Y_OFFSET
+            platform.pipe_y_targets[3] = platform.pipes[3].position.y + PIPES_Y_OFFSET
+          } else if (pipe_i === 3 && next_platform && !next_platform.pipe_y_targets) {
+            next_platform.pipe_y_targets = [
+              next_platform.pipes[0].position.y - PIPES_Y_OFFSET,
+              next_platform.pipes[1].position.y + PIPES_Y_OFFSET,
+              0,
+              0
+            ]
+          }
+        }
+      }
+
+      if (pipe_y_target < pipe_y) {
+        pipe.position.y -= pipes_y_vel
+      }
+    } else if (reached_target) {
+      platform.pipe_y_targets[pipe_i] = 0
+    }
+
+    if (platform.pipe_y_targets?.every((item) => item === 0)) {
+      delete platform.pipe_y_targets
+    }
+  }
+
   useFrame((_state, delta) => {
     if (!bbMap) return
 
@@ -364,16 +457,19 @@ const NewYork = () => {
     const safeDelta = Math.min(delta, 0.01)
 
     const game_vel = 3 * safeDelta
+    const pipes_y_vel = 40 * safeDelta
 
-    for (const platform of platformSlices.current) {
+    for (let i = 0; i < platformSlices.current.length; i++) {
+      const platform = platformSlices.current[i]
       if (!bbMap[platform.terrain.name]) continue
 
       platform.terrain.position.x -= game_vel
       updateBboxes(platform.terrain)
 
-      platform.pipes.forEach((pipe) => {
+      platform.pipes.forEach((pipe, pipe_i) => {
         pipe.position.x -= game_vel
         updateBboxes(pipe)
+        rearrangeIdlePipe(platform, pipe, pipe_i, i, pipes_y_vel)
       })
 
       updateSensors(platform.pipes)
@@ -381,6 +477,13 @@ const NewYork = () => {
       if (platform.terrain.position.x < LOOP_TRIGGER) {
         movePlatformToFront(platform)
       }
+    }
+
+    if (
+      pipesState === 'rearranging' &&
+      platformSlices.current.every((platform) => !platform.pipe_y_targets)
+    ) {
+      setPipesState('playing')
     }
   })
 

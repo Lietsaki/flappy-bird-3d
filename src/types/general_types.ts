@@ -8,6 +8,7 @@ export interface SceneChild {
 export interface PlatformSlice {
   terrain: Object3D
   pipes: [Object3D, Object3D, Object3D, Object3D]
+  pipe_y_targets?: [number, number, number, number]
 }
 
 export type BoundingBoxType = 'collision' | 'sensor'
@@ -19,3 +20,5 @@ export interface BoundingBoxesMap {
 }
 
 export type BirdAnimationName = 'bird_flap' | 'bird_hurt_1' | 'bird_falling' | 'bird_idle'
+
+export type PipesState = 'idle' | 'rearranging' | 'playing'
