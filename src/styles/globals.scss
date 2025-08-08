@@ -18,3 +18,7 @@ body,
 .lil-gui.root {
   left: 15px;
 }
+
+canvas {
+  user-select: none;
+}

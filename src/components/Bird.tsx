@@ -1,4 +1,4 @@
-import { useGLTF, useAnimations } from '@react-three/drei'
+import { useGLTF, useAnimations, SpriteAnimator } from '@react-three/drei'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { BirdAnimationName, SceneChild } from '../types/general_types'
@@ -35,6 +35,7 @@ const Bird = () => {
 
   const [currentAction, setCurrentAction] = useState<THREE.AnimationAction>()
   const [sceneChild, setSceneChild] = useState<SceneChild>()
+  const [showingImpact, setShowingImpact] = useState(false)
 
   const bird_body = useRef<THREE.Object3D | null>(null)
   const bird_helper = useRef<THREE.Box3Helper | null>(null)
@@ -164,6 +165,24 @@ const Bird = () => {
     }
   }, [changeAction, currentAction, gameJustEnded, playing])
 
+  const getImpactSprite = () => {
+    if (!bird_body.current || !showingImpact) return null
+    const { x, y } = bird_body.current.position
+
+    return (
+      <SpriteAnimator
+        position={[x, y, 20]}
+        startFrame={0}
+        scale={3}
+        asSprite={true}
+        fps={30}
+        textureImageURL={'/sprites/impact.png'}
+        textureDataURL={'/sprites/impact.json'}
+        onEnd={() => setShowingImpact(false)}
+      />
+    )
+  }
+
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
     const safeDelta = Math.min(delta, 0.01)
@@ -181,6 +200,7 @@ const Bird = () => {
         if (type === 'collision' && playing && pipesState === 'playing') {
           setPlaying(false)
           setGameJustEnded(true)
+          setShowingImpact(true)
           changeAction('bird_hurt_1', false, 0.001)
         } else if (type === 'sensor') {
           setLastPassedPipes(name)
@@ -229,7 +249,12 @@ const Bird = () => {
 
   if (!sceneChild) return null
 
-  return sceneChild.element
+  return (
+    <>
+      {sceneChild.element}
+      {getImpactSprite()}
+    </>
+  )
 }
 
 export default Bird
