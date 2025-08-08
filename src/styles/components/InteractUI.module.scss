@@ -45,6 +45,10 @@
 
       align-items: end;
     }
+
+    &.exiting_right_area {
+      animation: goLeftAndRight 1s ease-in-out;
+    }
   }
 
   .start_message {
@@ -65,6 +69,10 @@
       padding: 0px 10px;
       text-shadow: 2px 2px 0px $dark_orange;
       animation: blink 2s infinite ease-in-out;
+
+      &.exiting_start_message {
+        animation: goUpAndDown 1s ease-in-out;
+      }
     }
   }
 }

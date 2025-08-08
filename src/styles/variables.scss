@@ -38,3 +38,27 @@ $brown: #553000;
     opacity: 0;
   }
 }
+
+@keyframes goUpAndDown {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
+  100% {
+    transform: translateY(150px);
+  }
+}
+
+@keyframes goLeftAndRight {
+  0% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(-30px);
+  }
+  100% {
+    transform: translateX(450px);
+  }
+}
