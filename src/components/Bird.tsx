@@ -5,7 +5,7 @@ import type { BirdAnimationName, SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
-  gameJustEndedAtom,
+  gameOverAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
   playingAtom,
@@ -14,6 +14,7 @@ import {
 } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
+import { getRandomNumber } from '../helpers/helper_functions'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
@@ -21,6 +22,18 @@ const FRAME_GRAVITY = 8
 const JUMP_DECIMATE_POWER = 50 // how fast we are pulled down
 const JUMP_POWER = 28 // how fast we go up
 const FALLING_BIRD_ROTATION_LIMIT = -1.3
+const ACTIVATE_FALLING_ANIMATION_ROTATION_LIMIT = -0.7
+
+const GAME_OVER_CAMERA_ROTATIONS = {
+  X: {
+    min: -0.08,
+    max: 0.09
+  },
+  Y: {
+    min: -0.2,
+    max: 0.2
+  }
+}
 
 const BIRD_ANIMATION_SPEEDMAP: { [key: string]: number } = {
   bird_flap: 1,
@@ -43,6 +56,7 @@ const Bird = () => {
   const jump_velocity = useRef(new THREE.Vector3())
   const just_flapped_timeout = useRef<NodeJS.Timeout | null>(null)
   const rotation_tween = useRef<gsap.core.Tween | null>(null)
+  const camera_target_rotation = useRef<{ x: number; y: number } | null>(null)
 
   const [showHelpers] = useAtom(showHelpersAtom)
   const [bbMap] = useAtom(boundingBoxesMapAtom)
@@ -50,10 +64,10 @@ const Bird = () => {
   const [pipesState] = useAtom(pipesStateAtom)
   const [, setLastPassedPipes] = useAtom(lastPassedPipesAtom)
   const [playing, setPlaying] = useAtom(playingAtom)
-  const [gameJustEnded, setGameJustEnded] = useAtom(gameJustEndedAtom)
+  const [gameOver, setGameOver] = useAtom(gameOverAtom)
   const [score, setScore] = useAtom(scoreAtom)
 
-  const { scene } = useThree()
+  const { scene, camera } = useThree()
 
   const changeAction = useCallback(
     (animation_name: BirdAnimationName, play_once?: boolean, fadeDuration = 0.1) => {
@@ -142,11 +156,12 @@ const Bird = () => {
     }
   }, [wingFlap])
 
+  // 3) Setup gliding animation when not playing
   useEffect(() => {
-    if (!bird_body.current) return
+    if (!bird_body.current || gameOver) return
     let tween: gsap.core.Tween
 
-    if (!playing && !gameJustEnded) {
+    if (!playing) {
       tween = gsap.to(bird_body.current.position, {
         y: GLIDING_ANIMATION_TOP,
         duration: 0.5,
@@ -163,7 +178,7 @@ const Bird = () => {
     return () => {
       if (tween) tween.kill()
     }
-  }, [changeAction, currentAction, gameJustEnded, playing])
+  }, [changeAction, currentAction, gameOver, playing])
 
   const getImpactSprite = () => {
     if (!bird_body.current || !showingImpact) return null
@@ -183,12 +198,23 @@ const Bird = () => {
     )
   }
 
+  const setupCameraRotation = () => {
+    const { X, Y } = GAME_OVER_CAMERA_ROTATIONS
+    camera_target_rotation.current = { x: getRandomNumber(X.min, X.max), y: getRandomNumber(Y.min, Y.max) }
+  }
+
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
     const safeDelta = Math.min(delta, 0.01)
 
     sceneChild.object.position.copy(bird_body.current.position)
     const updated_bird_bbox = collision_bbox.current.setFromObject(bird_body.current)
+
+    if (camera_target_rotation.current) {
+      const { x, y } = camera_target_rotation.current
+      camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, x, 0.05)
+      camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, y, 0.05)
+    }
 
     // 1) Check for collisions
     for (const bb_key in bbMap) {
@@ -199,9 +225,10 @@ const Bird = () => {
       if (intersection) {
         if (type === 'collision' && playing && pipesState === 'playing') {
           setPlaying(false)
-          setGameJustEnded(true)
+          setGameOver(true)
           setShowingImpact(true)
           changeAction('bird_hurt_1', false, 0.001)
+          setupCameraRotation()
         } else if (type === 'sensor') {
           setLastPassedPipes(name)
 
@@ -218,7 +245,7 @@ const Bird = () => {
 
       // 3) Rotate the bird forward as it falls. Also, animate it after a certain threshold
       if (sceneChild.object.rotation.z > FALLING_BIRD_ROTATION_LIMIT && !just_flapped_timeout.current) {
-        if (sceneChild.object.rotation.z < FALLING_BIRD_ROTATION_LIMIT + 0.6) {
+        if (sceneChild.object.rotation.z < ACTIVATE_FALLING_ANIMATION_ROTATION_LIMIT) {
           changeAction('bird_falling')
         }
 

@@ -12,7 +12,7 @@ const lastPassedPipesAtom = atom<string>('sensor_pipes_3')
 
 const playingAtom = atom(false)
 const pipesStateAtom = atom<PipesState>('idle')
-const gameJustEndedAtom = atom(false)
+const gameOverAtom = atom(false)
 
 const scoreAtom = atom(0)
 
@@ -21,7 +21,7 @@ export {
   guiAtom,
   boundingBoxesMapAtom,
   playingAtom,
-  gameJustEndedAtom,
+  gameOverAtom,
   scoreAtom,
   lastPassedPipesAtom,
   pipesStateAtom

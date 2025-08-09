@@ -10,6 +10,7 @@ import { useHelper } from '@react-three/drei'
 import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
+  gameOverAtom,
   guiAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
@@ -39,6 +40,7 @@ const NewYork = () => {
   const [playing, setPlaying] = useAtom(playingAtom)
   const [lastPassedPipes] = useAtom(lastPassedPipesAtom)
   const [pipesState, setPipesState] = useAtom(pipesStateAtom)
+  const [gameOver] = useAtom(gameOverAtom)
 
   const { scene } = useThree()
 
@@ -503,11 +505,11 @@ const NewYork = () => {
   }
 
   useFrame((_state, delta) => {
-    if (!bbMap) return
-
     if (directional_light_ref.current) {
       directional_light_ref.current.position.copy(dlightPosition)
     }
+
+    if (!bbMap || gameOver) return
 
     const safeDelta = Math.min(delta, 0.01)
 
