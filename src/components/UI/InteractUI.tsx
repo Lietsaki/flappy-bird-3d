@@ -1,6 +1,6 @@
 import styles from 'styles/components/InteractUI.module.scss'
 import Button from './Button'
-import { gameOverAtom, playingAtom } from '../../store/store'
+import { gameOverAtom, playingAtom, scoreAtom } from '../../store/store'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
@@ -15,6 +15,7 @@ const {
   exiting_start_message,
   exiting_right_area,
   central_area,
+  score_text,
   game_over_text,
   exit,
   game_over_modal_area,
@@ -32,6 +33,8 @@ const InteractUI = () => {
   const [gameOver] = useAtom(gameOverAtom)
   const [showingUI, setShowingUI] = useState(true)
   const [uiExiting, setUIExiting] = useState(false)
+
+  const [score] = useAtom(scoreAtom)
 
   const [gameOverTextEntering, setGameOverTextEntering] = useState(false)
   const [gameOverTextExiting, setGameOverTextExiting] = useState(false)
@@ -60,9 +63,9 @@ const InteractUI = () => {
       await wait(1300)
       setGameOverTextExiting(true)
       setShowingGameOverModal(true)
+      setGameOverTextEntering(false)
 
       await wait(500)
-      setGameOverTextEntering(false)
       setGameOverTextExiting(false)
     }
 
@@ -112,7 +115,17 @@ const InteractUI = () => {
     return <span className={exiting_class}>Press space or click to play</span>
   }
 
-  const getCentralArea = () => {
+  const getScoreText = () => {
+    if (!playing) return null
+
+    return (
+      <div className={central_area}>
+        <div className={score_text}>{score}</div>
+      </div>
+    )
+  }
+
+  const getGameOverScreen = () => {
     if (!gameOver) return null
 
     const getGameOverText = () => {
@@ -135,7 +148,7 @@ const InteractUI = () => {
             <div className={game_over_modal_bg}>
               <div className={game_over_modal}>
                 <div className={game_over_modal_text}>Score</div>
-                <div className={game_over_modal_number}>1</div>
+                <div className={game_over_modal_number}>{score}</div>
 
                 <div className={game_over_modal_text}>Best</div>
                 <div className={game_over_modal_number}>1</div>
@@ -161,7 +174,8 @@ const InteractUI = () => {
 
   return (
     <div className={interact_ui}>
-      {getCentralArea()}
+      {getScoreText()}
+      {getGameOverScreen()}
       {getRightArea()}
 
       <div className={start_message}>{getStartMessage()}</div>

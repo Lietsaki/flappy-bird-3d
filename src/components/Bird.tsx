@@ -5,6 +5,7 @@ import type { BirdAnimationName, SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
+  firstScoreReadySensorAtom,
   gameOverAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
@@ -62,7 +63,8 @@ const Bird = () => {
   const [bbMap] = useAtom(boundingBoxesMapAtom)
 
   const [pipesState] = useAtom(pipesStateAtom)
-  const [, setLastPassedPipes] = useAtom(lastPassedPipesAtom)
+  const [firstScoreReadySensor, setFirstScoreReadySensor] = useAtom(firstScoreReadySensorAtom)
+  const [lastPassedPipes, setLastPassedPipes] = useAtom(lastPassedPipesAtom)
   const [playing, setPlaying] = useAtom(playingAtom)
   const [gameOver, setGameOver] = useAtom(gameOverAtom)
   const [score, setScore] = useAtom(scoreAtom)
@@ -232,8 +234,20 @@ const Bird = () => {
         } else if (type === 'sensor') {
           setLastPassedPipes(name)
 
-          if (playing && pipesState === 'playing') {
-            setScore(score + 1)
+          if (
+            playing &&
+            pipesState === 'playing' &&
+            (firstScoreReadySensor.passed || firstScoreReadySensor.name === name)
+          ) {
+            if (firstScoreReadySensor.name === name && !firstScoreReadySensor.passed) {
+              setFirstScoreReadySensor({ ...firstScoreReadySensor, passed: true })
+            }
+
+            // Add only 1 point per passed pipe
+            // (otherwise we'd add points as long as we're in a sensor)
+            if (name !== lastPassedPipes) {
+              setScore(score + 1)
+            }
           }
         }
       }

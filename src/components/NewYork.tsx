@@ -10,6 +10,7 @@ import { useHelper } from '@react-three/drei'
 import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
+  firstScoreReadySensorAtom,
   gameOverAtom,
   guiAtom,
   lastPassedPipesAtom,
@@ -40,6 +41,7 @@ const NewYork = () => {
   const [playing, setPlaying] = useAtom(playingAtom)
   const [lastPassedPipes] = useAtom(lastPassedPipesAtom)
   const [pipesState, setPipesState] = useAtom(pipesStateAtom)
+  const [, setFirstScoreReadySensor] = useAtom(firstScoreReadySensorAtom)
   const [gameOver] = useAtom(gameOverAtom)
 
   const { scene } = useThree()
@@ -369,12 +371,16 @@ const NewYork = () => {
         return platform.pipes.find((pipe) => pipe.name.includes(passed_pipes_number))
       }) + 1
 
+    const next_first_sensor_number = platformSlices.current[next_platform_i].pipes[0].name.split('_')[2]
+    const first_score_ready_sensor = `sensor_pipes_${next_first_sensor_number}`
+
     for (; next_platform_i < platformSlices.current.length; next_platform_i++) {
       addOffsetsToPlatform(platformSlices.current[next_platform_i])
     }
 
+    setFirstScoreReadySensor({ name: first_score_ready_sensor, passed: false })
     setPipesState('playing')
-  }, [lastPassedPipes, pipesState, playing, setPipesState])
+  }, [lastPassedPipes, pipesState, playing, setFirstScoreReadySensor, setPipesState])
 
   // 5) GUI
   useEffect(() => {
@@ -473,8 +479,8 @@ const NewYork = () => {
       if (pipe_y_target > pipe_y) {
         pipe.position.y += pipes_y_vel
 
-        // Set Y targets in the next pipes to get a "waterfall" effect when
-        // the current pipe is about to reach its target.
+        // (only in opening mode) Set Y targets in the next pipes to get a "waterfall"
+        // effect when the current pipe is about to reach its target.
         if (pipe_y > pipe_y_target * 0.75 && pipesState === 'opening') {
           const next_platform = platformSlices.current[platform_i + 1]
 
