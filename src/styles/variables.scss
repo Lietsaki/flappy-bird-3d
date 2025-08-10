@@ -7,6 +7,11 @@ $black: #000000;
 $orange: #e86101;
 $dark_orange: #c04e00;
 $brown: #553000;
+$light_yellow: #ded895;
+$lighter_yellow: #f0eaa1;
+$dark_yellow: #c7c286;
+$burgundy: #543847;
+$peach: #fc7858;
 
 @font-face {
   font-family: 'nds';
@@ -39,6 +44,8 @@ $brown: #553000;
   }
 }
 
+// ====================== MAIN MENU EXIT ANIMATIONS ====================== //
+
 @keyframes goUpAndDown {
   0% {
     transform: translateY(0px);
@@ -60,5 +67,68 @@ $brown: #553000;
   }
   100% {
     transform: translateX(450px);
+  }
+}
+
+// ====================== GAME OVER TEXT ANIMATIONS ====================== //
+
+@keyframes comeFromLeftSide {
+  0% {
+    transform: translateX(-60vw);
+  }
+  70% {
+    transform: translateX(2vw);
+  }
+  100% {
+    transform: translateX(0vw);
+  }
+}
+
+@keyframes exitToRightSide {
+  0% {
+    transform: translateX(0vw);
+  }
+  20% {
+    transform: translateX(-2vw);
+  }
+  100% {
+    transform: translateX(60vw);
+  }
+}
+
+@keyframes comeFromRightSide {
+  0% {
+    transform: translateX(60vw);
+  }
+  70% {
+    transform: translateX(-2vw);
+  }
+  100% {
+    transform: translateX(0vw);
+  }
+}
+
+@keyframes exitToLeftSide {
+  0% {
+    transform: translateX(0vw);
+  }
+  20% {
+    transform: translateX(2vw);
+  }
+  100% {
+    transform: translateX(-60vw);
+  }
+}
+
+// ====================== GAME OVER MODAL ANIMATIONS ====================== //
+
+@keyframes comeUpWithOpacity {
+  0% {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
