@@ -110,6 +110,7 @@
 
       .game_over_modal {
         background-color: $light_yellow;
+        box-shadow: inset 0px 2.5px 0px $lighter_yellow, inset 0px -3px 0px $dark_yellow;
 
         width: 150px;
         height: 200px;
