@@ -10,6 +10,7 @@ import {
   lastPassedPipesAtom,
   pipesStateAtom,
   playingAtom,
+  restartingGameAtom,
   scoreAtom,
   showHelpersAtom
 } from '../store/store'
@@ -35,6 +36,8 @@ const GAME_OVER_CAMERA_ROTATIONS = {
     max: 0.2
   }
 }
+
+const INITIAL_POSITION = new THREE.Vector3(-30, GLIDING_ANIMATION_BOTTOM, 13.5)
 
 const BIRD_ANIMATION_SPEEDMAP: { [key: string]: number } = {
   bird_flap: 1,
@@ -68,6 +71,7 @@ const Bird = () => {
   const [playing, setPlaying] = useAtom(playingAtom)
   const [gameOver, setGameOver] = useAtom(gameOverAtom)
   const [score, setScore] = useAtom(scoreAtom)
+  const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
 
   const { scene, camera } = useThree()
 
@@ -117,7 +121,6 @@ const Bird = () => {
 
     bird_body.current = bird_bbox
 
-    const INITIAL_POSITION = new THREE.Vector3(-30, GLIDING_ANIMATION_BOTTOM, 13.5)
     bird_body.current.position.copy(INITIAL_POSITION)
 
     // NOTE: When rigs are added to a primitive, they're "taken" out of their original model.
@@ -142,10 +145,12 @@ const Bird = () => {
   // 2) Keyboard and Mouse event listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code.toLowerCase() === 'space') wingFlap()
+      if (e.code.toLowerCase() === 'space' && !restartingGame) wingFlap()
     }
 
-    const handleMousedown = () => {
+    const handleMousedown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (restartingGame || target.tagName !== 'CANVAS') return
       wingFlap()
     }
 
@@ -156,7 +161,7 @@ const Bird = () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('mousedown', handleMousedown)
     }
-  }, [wingFlap])
+  }, [restartingGame, wingFlap])
 
   // 3) Setup gliding animation when not playing
   useEffect(() => {
@@ -181,6 +186,21 @@ const Bird = () => {
       if (tween) tween.kill()
     }
   }, [changeAction, currentAction, gameOver, playing])
+
+  // 4) Restart game logic
+  useEffect(() => {
+    if (!restartingGame || !bird_body.current || !sceneChild) return
+
+    bird_body.current.position.copy(INITIAL_POSITION)
+    sceneChild.object.rotation.set(0, 0, 0, 'XYZ')
+    changeAction('bird_idle')
+
+    camera_target_rotation.current = { x: 0, y: 0 }
+
+    setGameOver(false)
+    setScore(0)
+    setRestartingGame(false)
+  }, [restartingGame, changeAction, sceneChild, camera, setGameOver, setScore, setRestartingGame])
 
   const getImpactSprite = () => {
     if (!bird_body.current || !showingImpact) return null

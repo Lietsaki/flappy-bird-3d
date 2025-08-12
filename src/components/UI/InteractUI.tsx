@@ -1,6 +1,6 @@
 import styles from 'styles/components/InteractUI.module.scss'
 import Button from './Button'
-import { gameOverAtom, playingAtom, scoreAtom } from '../../store/store'
+import { gameOverAtom, playingAtom, restartingGameAtom, scoreAtom } from '../../store/store'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
@@ -31,6 +31,7 @@ const {
 const InteractUI = () => {
   const [playing] = useAtom(playingAtom)
   const [gameOver] = useAtom(gameOverAtom)
+  const [, setRestartingGame] = useAtom(restartingGameAtom)
   const [showingUI, setShowingUI] = useState(true)
   const [uiExiting, setUIExiting] = useState(false)
 
@@ -77,7 +78,9 @@ const InteractUI = () => {
   }
 
   const restartGame = () => {
-    console.log('restartGame')
+    setRestartingGame(true)
+    setShowingGameOverModal(false)
+    setShowingUI(true)
   }
 
   const backToMenu = () => {

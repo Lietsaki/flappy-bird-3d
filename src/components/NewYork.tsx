@@ -15,7 +15,8 @@ import {
   guiAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
-  playingAtom
+  playingAtom,
+  restartingGameAtom
 } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
@@ -43,6 +44,7 @@ const NewYork = () => {
   const [pipesState, setPipesState] = useAtom(pipesStateAtom)
   const [, setFirstScoreReadySensor] = useAtom(firstScoreReadySensorAtom)
   const [gameOver] = useAtom(gameOverAtom)
+  const [restartingGame] = useAtom(restartingGameAtom)
 
   const { scene } = useThree()
 
@@ -338,7 +340,7 @@ const NewYork = () => {
       }) - 1
 
     // Add a target Y to all pipes before, the following pipes will
-    // receive their target in rearrangeIdlePipe.
+    // receive their target in rearrangePipe.
     while (penultimate_platform_i >= 0) {
       const pipes = platformSlices.current[penultimate_platform_i].pipes
       platformSlices.current[penultimate_platform_i].pipe_y_targets = [
@@ -417,6 +419,22 @@ const NewYork = () => {
       platformsFolder.destroy()
     }
   }, [dlightPosition, gui, addPlatform, movePlatformToFront, setBbMap, bbMap, sceneChildren, setPlaying])
+
+  // 6) Restart game
+  useEffect(() => {
+    if (!restartingGame) return
+
+    for (const platform of platformSlices.current) {
+      platform.pipe_y_targets = [
+        base_bottom_pipe_y.current,
+        base_top_pipe_y.current,
+        base_bottom_pipe_y.current,
+        base_top_pipe_y.current
+      ]
+    }
+
+    setPipesState('idle')
+  }, [lastPassedPipes, restartingGame, setFirstScoreReadySensor, setPipesState])
 
   const renderScene = () => {
     return sceneChildren.map((child) => child.element)

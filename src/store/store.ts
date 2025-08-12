@@ -14,6 +14,7 @@ const playingAtom = atom(false)
 const pipesStateAtom = atom<PipesState>('idle')
 const firstScoreReadySensorAtom = atom<ScoreReadySensor>({ name: '', passed: false })
 const gameOverAtom = atom(false)
+const restartingGameAtom = atom(false)
 
 const scoreAtom = atom(0)
 
@@ -26,5 +27,6 @@ export {
   scoreAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
-  firstScoreReadySensorAtom
+  firstScoreReadySensorAtom,
+  restartingGameAtom
 }
