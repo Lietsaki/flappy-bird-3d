@@ -44,7 +44,7 @@ const NewYork = () => {
   const [pipesState, setPipesState] = useAtom(pipesStateAtom)
   const [, setFirstScoreReadySensor] = useAtom(firstScoreReadySensorAtom)
   const [gameOver] = useAtom(gameOverAtom)
-  const [restartingGame] = useAtom(restartingGameAtom)
+  const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
 
   const { scene } = useThree()
 
@@ -180,7 +180,7 @@ const NewYork = () => {
     setSceneChildren(processedSceneChildren)
   }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes])
 
-  const addOffsetsToPlatform = (platform: PlatformSlice) => {
+  const addOffsetsToPlatform = (platform: PlatformSlice, applyOffsetsMap = [true, true]) => {
     const pair_1_offset = getRandomNumber(4, 6)
     const negative_1 = Math.random() > 0.5
 
@@ -193,11 +193,14 @@ const NewYork = () => {
       negative_2 = !negative_2
     }
 
+    const pipes_1_offset = negative_1 ? -pair_1_offset : pair_1_offset
+    const pipes_2_offset = negative_2 ? -pair_2_offset : pair_2_offset
+
     platform.pipe_y_targets = [
-      base_bottom_pipe_y.current + (negative_1 ? -pair_1_offset : pair_1_offset),
-      base_top_pipe_y.current + (negative_1 ? -pair_1_offset : pair_1_offset),
-      base_bottom_pipe_y.current + (negative_2 ? -pair_2_offset : pair_2_offset),
-      base_top_pipe_y.current + (negative_2 ? -pair_2_offset : pair_2_offset)
+      applyOffsetsMap[0] ? base_bottom_pipe_y.current + pipes_1_offset : 0,
+      applyOffsetsMap[0] ? base_top_pipe_y.current + pipes_1_offset : 0,
+      applyOffsetsMap[1] ? base_bottom_pipe_y.current + pipes_2_offset : 0,
+      applyOffsetsMap[1] ? base_top_pipe_y.current + pipes_2_offset : 0
     ]
   }
 
@@ -336,7 +339,7 @@ const NewYork = () => {
     const passed_pipes_number = lastPassedPipes.split('_')[2]
     let penultimate_platform_i =
       platformSlices.current.findIndex((platform) => {
-        return platform.pipes.find((pipe) => pipe.name.includes(passed_pipes_number))
+        return platform.pipes.find((pipe) => pipe.name.split('_')[2] === passed_pipes_number)
       }) - 1
 
     // Add a target Y to all pipes before, the following pipes will
@@ -368,16 +371,29 @@ const NewYork = () => {
     }
 
     const passed_pipes_number = lastPassedPipes.split('_')[2]
-    let next_platform_i =
-      platformSlices.current.findIndex((platform) => {
-        return platform.pipes.find((pipe) => pipe.name.includes(passed_pipes_number))
-      }) + 1
 
-    const next_first_sensor_number = platformSlices.current[next_platform_i].pipes[0].name.split('_')[2]
+    // Make sure to always leave a distance of 1 pipe between the player
+    // and the next pipe when starting a game
+    let passed_last_pipe = false
+
+    const last_passed_platform_i = platformSlices.current.findIndex((platform) => {
+      const pipe_i = platform.pipes.findIndex((pipe) => pipe.name.split('_')[2] === passed_pipes_number)
+      if (pipe_i > 1) passed_last_pipe = true
+      return pipe_i > -1
+    })
+
+    const next_platform_i = last_passed_platform_i + 1
+
+    const next_first_sensor_number =
+      platformSlices.current[next_platform_i].pipes[passed_last_pipe ? 2 : 0].name.split('_')[2]
     const first_score_ready_sensor = `sensor_pipes_${next_first_sensor_number}`
 
-    for (; next_platform_i < platformSlices.current.length; next_platform_i++) {
-      addOffsetsToPlatform(platformSlices.current[next_platform_i])
+    for (let i = next_platform_i; i < platformSlices.current.length; i++) {
+      if (i === next_platform_i && passed_last_pipe) {
+        addOffsetsToPlatform(platformSlices.current[i], [false, true])
+        continue
+      }
+      addOffsetsToPlatform(platformSlices.current[i])
     }
 
     setFirstScoreReadySensor({ name: first_score_ready_sensor, passed: false })
@@ -433,8 +449,8 @@ const NewYork = () => {
       ]
     }
 
-    setPipesState('idle')
-  }, [lastPassedPipes, restartingGame, setFirstScoreReadySensor, setPipesState])
+    setPipesState('rearranging')
+  }, [restartingGame, setPipesState])
 
   const renderScene = () => {
     return sceneChildren.map((child) => child.element)
@@ -562,6 +578,15 @@ const NewYork = () => {
 
     if (pipesState === 'opening' && platformSlices.current.every((platform) => !platform.pipe_y_targets)) {
       setPipesState('rearranging')
+    }
+
+    if (
+      pipesState === 'rearranging' &&
+      restartingGame &&
+      platformSlices.current.every((platform) => !platform.pipe_y_targets)
+    ) {
+      setPipesState('idle')
+      setRestartingGame(false)
     }
   })
 

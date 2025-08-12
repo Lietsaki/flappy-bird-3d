@@ -71,7 +71,7 @@ const Bird = () => {
   const [playing, setPlaying] = useAtom(playingAtom)
   const [gameOver, setGameOver] = useAtom(gameOverAtom)
   const [score, setScore] = useAtom(scoreAtom)
-  const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
+  const [restartingGame] = useAtom(restartingGameAtom)
 
   const { scene, camera } = useThree()
 
@@ -97,7 +97,7 @@ const Bird = () => {
     [currentAction, animations]
   )
   const wingFlap = useCallback(() => {
-    if (!sceneChild) return
+    if (!sceneChild || gameOver) return
     if (!playing) setPlaying(true)
 
     jump_velocity.current.y = JUMP_POWER
@@ -110,7 +110,7 @@ const Bird = () => {
     just_flapped_timeout.current = setTimeout(() => {
       just_flapped_timeout.current = null
     }, 500)
-  }, [changeAction, playing, sceneChild, setPlaying])
+  }, [changeAction, gameOver, playing, sceneChild, setPlaying])
 
   // 1) Load model and start idle animation
   useEffect(() => {
@@ -145,12 +145,12 @@ const Bird = () => {
   // 2) Keyboard and Mouse event listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code.toLowerCase() === 'space' && !restartingGame) wingFlap()
+      if (e.code.toLowerCase() === 'space') wingFlap()
     }
 
     const handleMousedown = (e: MouseEvent) => {
       const target = e.target as HTMLElement
-      if (restartingGame || target.tagName !== 'CANVAS') return
+      if (target.tagName !== 'CANVAS') return
       wingFlap()
     }
 
@@ -161,7 +161,7 @@ const Bird = () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('mousedown', handleMousedown)
     }
-  }, [restartingGame, wingFlap])
+  }, [wingFlap])
 
   // 3) Setup gliding animation when not playing
   useEffect(() => {
@@ -189,7 +189,7 @@ const Bird = () => {
 
   // 4) Restart game logic
   useEffect(() => {
-    if (!restartingGame || !bird_body.current || !sceneChild) return
+    if (!bird_body.current || !sceneChild || !restartingGame || playing) return
 
     bird_body.current.position.copy(INITIAL_POSITION)
     sceneChild.object.rotation.set(0, 0, 0, 'XYZ')
@@ -199,8 +199,7 @@ const Bird = () => {
 
     setGameOver(false)
     setScore(0)
-    setRestartingGame(false)
-  }, [restartingGame, changeAction, sceneChild, camera, setGameOver, setScore, setRestartingGame])
+  }, [restartingGame, changeAction, sceneChild, setGameOver, setScore, playing])
 
   const getImpactSprite = () => {
     if (!bird_body.current || !showingImpact) return null
