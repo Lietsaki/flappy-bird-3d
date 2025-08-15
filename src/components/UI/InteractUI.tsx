@@ -13,6 +13,7 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
 import bird_skins from '../../../public/character_data/bird_skins.json'
+import { isSkinUnlocked } from '../../db/localstorage'
 
 const {
   interact_ui,
@@ -139,7 +140,7 @@ const InteractUI = () => {
         </div>
 
         <div className={confirm_bird_buttons}>
-          <Button text={'OK'} onClick={confirmBird} />
+          <Button text={'OK'} onClick={confirmBird} disabled={!isSkinUnlocked(previewingBird)} />
           <Button text={'←'} aria_label="back" onClick={backToMenu} />
         </div>
       </div>
