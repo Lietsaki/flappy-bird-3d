@@ -1,15 +1,17 @@
-import { useGLTF, useAnimations, SpriteAnimator } from '@react-three/drei'
+import { useGLTF, useAnimations, SpriteAnimator, useTexture } from '@react-three/drei'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { BirdAnimationName, SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
+  currentSkinAtom,
   firstScoreReadySensorAtom,
   gameOverAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
   playingAtom,
+  previewingBirdAtom,
   restartingGameAtom,
   scoreAtom,
   selectingBirdAtom,
@@ -18,6 +20,7 @@ import {
 import { useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { getRandomNumber } from '../helpers/helper_functions'
+import bird_skins from '../../public/character_data/bird_skins.json'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
@@ -75,6 +78,15 @@ const Bird = () => {
   const [restartingGame] = useAtom(restartingGameAtom)
 
   const [selectingBird] = useAtom(selectingBirdAtom)
+  const [previewingBird] = useAtom(previewingBirdAtom)
+  const [currentSkin] = useAtom(currentSkinAtom)
+
+  const bird_textures = useTexture({
+    classic_bird_texture: '/textures/classic_bird_texture.png',
+    dragonheart_bird_texture: '/textures/dragonheart_bird_texture.png',
+    ghost_bird_texture: '/textures/ghost_bird_texture.png',
+    supersonic_bird_texture: '/textures/supersonic_bird_texture.png'
+  }) as { [key: string]: THREE.Texture }
 
   const { scene, camera } = useThree()
 
@@ -99,6 +111,7 @@ const Bird = () => {
     },
     [currentAction, animations]
   )
+
   const wingFlap = useCallback(() => {
     if (!sceneChild || gameOver || selectingBird) return
     if (!playing) setPlaying(true)
@@ -119,11 +132,13 @@ const Bird = () => {
   useEffect(() => {
     if (sceneChild) return
 
+    const bird_material = bird_model.materials.bird_material as THREE.MeshStandardMaterial
+    bird_material.map!.minFilter = THREE.LinearFilter
+
     const bird_rig = bird_model.scene.children.find((child) => child.name === 'bird_rig')!
     const bird_bbox = bird_model.scene.children.find((child) => child.name === 'bird_bbox')!
 
     bird_body.current = bird_bbox
-
     bird_body.current.position.copy(INITIAL_POSITION)
 
     // NOTE: When rigs are added to a primitive, they're "taken" out of their original model.
@@ -203,6 +218,36 @@ const Bird = () => {
     setGameOver(false)
     setScore(0)
   }, [restartingGame, changeAction, sceneChild, setGameOver, setScore, playing])
+
+  const setTexture = useCallback(
+    (skin_id: string) => {
+      const texture_obj = bird_skins.find((skin) => skin.id === skin_id)
+      if (!texture_obj) return
+
+      const texture_name = `${texture_obj.name.toLowerCase()}_bird_texture`
+      const texture = bird_textures[texture_name]
+
+      if (!texture || !sceneChild) return
+
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.flipY = false
+      texture.needsUpdate = true
+      texture.minFilter = THREE.NearestFilter
+      texture.name = texture_name
+
+      const body_mesh = sceneChild.object.children.find((child) => child.name === 'body') as THREE.Mesh
+      const bird_material = body_mesh.material as THREE.MeshStandardMaterial
+
+      bird_material.map = texture
+    },
+    [bird_textures, sceneChild]
+  )
+
+  // Change texture
+  useEffect(() => {
+    if (!previewingBird || playing) return
+    setTexture(previewingBird)
+  }, [bird_textures, previewingBird, currentSkin, playing, setTexture])
 
   const getImpactSprite = () => {
     if (!bird_body.current || !showingImpact) return null

@@ -13,7 +13,7 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
 import bird_skins from '../../../public/character_data/bird_skins.json'
-import { isSkinUnlocked } from '../../db/localstorage'
+import { isSkinUnlocked } from '../../db/localStorage'
 
 const {
   interact_ui,
@@ -39,7 +39,8 @@ const {
 
   bird_selection_menu,
   birds_list,
-  confirm_bird_buttons
+  confirm_bird_buttons,
+  unlockable_bird_hint
 } = styles
 
 const InteractUI = () => {
@@ -94,6 +95,7 @@ const InteractUI = () => {
   }, [gameOver])
 
   const goToSelectBird = () => {
+    if (playing) return
     setSelectingBird(true)
   }
 
@@ -111,12 +113,13 @@ const InteractUI = () => {
     if (!selectingBird) return null
 
     const selectBird = (id: string) => {
-      console.log('now previewing: ', id)
       setPreviewingBird(id)
     }
 
     const confirmBird = () => {
-      console.log('confirm bird selection ', previewingBird)
+      if (!isSkinUnlocked(previewingBird)) return
+      setCurrentSkin(previewingBird)
+      setSelectingBird(false)
     }
 
     const backToMenu = () => {
@@ -175,10 +178,30 @@ const InteractUI = () => {
   }
 
   const getStartMessage = () => {
-    if (!showingUI) return null
+    if (!showingUI || selectingBird) return null
     const exiting_class = uiExiting ? exiting_start_message : ''
 
-    return <span className={exiting_class}>Press space or click to play</span>
+    return (
+      <div className={start_message}>
+        <span className={exiting_class}>Press space or click to play</span>
+      </div>
+    )
+  }
+
+  const getUnlockableBirdHint = () => {
+    if (!selectingBird || isSkinUnlocked(previewingBird)) return null
+
+    const skin_data = bird_skins.find((skin) => skin.id === previewingBird)
+    if (!skin_data) return null
+
+    let hint = `Unlocks at ${skin_data.unlocks_at} points`
+    if (skin_data.must_get_score_consecutively) hint = `Unlocks by ????`
+
+    return (
+      <div className={unlockable_bird_hint}>
+        <span>{hint}</span>
+      </div>
+    )
   }
 
   const getScoreText = () => {
@@ -244,7 +267,8 @@ const InteractUI = () => {
       {getGameOverScreen()}
       {getRightArea()}
 
-      <div className={start_message}>{getStartMessage()}</div>
+      {getStartMessage()}
+      {getUnlockableBirdHint()}
     </div>
   )
 }
