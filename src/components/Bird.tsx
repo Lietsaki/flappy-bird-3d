@@ -12,6 +12,7 @@ import {
   playingAtom,
   restartingGameAtom,
   scoreAtom,
+  selectingBirdAtom,
   showHelpersAtom
 } from '../store/store'
 import { useFrame, useThree } from '@react-three/fiber'
@@ -73,6 +74,8 @@ const Bird = () => {
   const [score, setScore] = useAtom(scoreAtom)
   const [restartingGame] = useAtom(restartingGameAtom)
 
+  const [selectingBird] = useAtom(selectingBirdAtom)
+
   const { scene, camera } = useThree()
 
   const changeAction = useCallback(
@@ -97,7 +100,7 @@ const Bird = () => {
     [currentAction, animations]
   )
   const wingFlap = useCallback(() => {
-    if (!sceneChild || gameOver) return
+    if (!sceneChild || gameOver || selectingBird) return
     if (!playing) setPlaying(true)
 
     jump_velocity.current.y = JUMP_POWER
@@ -110,7 +113,7 @@ const Bird = () => {
     just_flapped_timeout.current = setTimeout(() => {
       just_flapped_timeout.current = null
     }, 500)
-  }, [changeAction, gameOver, playing, sceneChild, setPlaying])
+  }, [changeAction, gameOver, playing, sceneChild, selectingBird, setPlaying])
 
   // 1) Load model and start idle animation
   useEffect(() => {

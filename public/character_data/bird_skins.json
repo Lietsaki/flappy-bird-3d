@@ -1,0 +1,23 @@
+[
+  {
+    "id": "a3dbcf50-2c21-418b-8a40-2b08d7cc8714",
+    "name": "Classic",
+    "unlocks_at": 0
+  },
+  {
+    "id": "71fda66c-7f02-4b99-a236-cce1466214aa",
+    "name": "Dragonheart",
+    "unlocks_at": 25
+  },
+  {
+    "id": "6d4fe61d-3387-4f57-8d50-e4a67775d897",
+    "name": "Ghost",
+    "unlocks_at": 13,
+    "must_get_score_consecutively": 2
+  },
+  {
+    "id": "537a6638-8843-4e99-a473-166f1ee6f083",
+    "name": "Supersonic",
+    "unlocks_at": 91
+  }
+]

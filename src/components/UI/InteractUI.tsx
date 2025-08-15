@@ -1,9 +1,18 @@
 import styles from 'styles/components/InteractUI.module.scss'
 import Button from './Button'
-import { gameOverAtom, playingAtom, restartingGameAtom, scoreAtom } from '../../store/store'
+import {
+  currentSkinAtom,
+  gameOverAtom,
+  playingAtom,
+  previewingBirdAtom,
+  restartingGameAtom,
+  scoreAtom,
+  selectingBirdAtom
+} from '../../store/store'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
+import bird_skins from '../../../public/character_data/bird_skins.json'
 
 const {
   interact_ui,
@@ -25,7 +34,11 @@ const {
   game_over_modal,
   game_over_modal_text,
   game_over_modal_number,
-  game_over_buttons
+  game_over_buttons,
+
+  bird_selection_menu,
+  birds_list,
+  confirm_bird_buttons
 } = styles
 
 const InteractUI = () => {
@@ -41,6 +54,11 @@ const InteractUI = () => {
   const [gameOverTextExiting, setGameOverTextExiting] = useState(false)
   const [showingGameOverModal, setShowingGameOverModal] = useState(false)
 
+  const [selectingBird, setSelectingBird] = useAtom(selectingBirdAtom)
+  const [previewingBird, setPreviewingBird] = useAtom(previewingBirdAtom)
+  const [currentSkin, setCurrentSkin] = useAtom(currentSkinAtom)
+
+  // 1) Manage showing/exiting UI state variables
   useEffect(() => {
     const updateUI = async () => {
       if (playing) {
@@ -54,6 +72,7 @@ const InteractUI = () => {
     updateUI()
   }, [playing])
 
+  // 2) Animate game over text
   useEffect(() => {
     if (!gameOver) return
 
@@ -74,7 +93,7 @@ const InteractUI = () => {
   }, [gameOver])
 
   const goToSelectBird = () => {
-    return ''
+    setSelectingBird(true)
   }
 
   const restartGame = () => {
@@ -87,7 +106,49 @@ const InteractUI = () => {
     console.log('backToMenu')
   }
 
+  const getBirdSelection = () => {
+    if (!selectingBird) return null
+
+    const selectBird = (id: string) => {
+      console.log('now previewing: ', id)
+      setPreviewingBird(id)
+    }
+
+    const confirmBird = () => {
+      console.log('confirm bird selection ', previewingBird)
+    }
+
+    const backToMenu = () => {
+      setSelectingBird(false)
+      setPreviewingBird(currentSkin)
+    }
+
+    return (
+      <div className={bird_selection_menu}>
+        <div className={birds_list}>
+          {bird_skins.map((skin) => {
+            return (
+              <Button
+                key={skin.id}
+                text={skin.name}
+                onClick={() => selectBird(skin.id)}
+                is_selected={previewingBird === skin.id}
+              />
+            )
+          })}
+        </div>
+
+        <div className={confirm_bird_buttons}>
+          <Button text={'OK'} onClick={confirmBird} />
+          <Button text={'←'} aria_label="back" onClick={backToMenu} />
+        </div>
+      </div>
+    )
+  }
+
   const getMenu = () => {
+    if (selectingBird) return null
+
     return (
       <div className={main_menu}>
         <Button text="Leaderboard" onClick={() => ''} />
@@ -107,6 +168,7 @@ const InteractUI = () => {
         </div>
 
         {getMenu()}
+        {getBirdSelection()}
       </div>
     )
   }

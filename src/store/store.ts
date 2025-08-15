@@ -1,6 +1,7 @@
 import { atom } from 'jotai'
 import * as dat from 'lil-gui'
 import type { BoundingBoxesMap, PipesState, ScoreReadySensor } from '../types/general_types'
+import bird_skins from '../../public/character_data/bird_skins.json'
 
 const SHOW_HELPERS = true
 const showHelpersAtom = atom(SHOW_HELPERS)
@@ -18,6 +19,10 @@ const restartingGameAtom = atom(false)
 
 const scoreAtom = atom(0)
 
+const selectingBirdAtom = atom(false)
+const previewingBirdAtom = atom(bird_skins[0].id)
+const currentSkinAtom = atom(bird_skins[0].id)
+
 export {
   showHelpersAtom,
   guiAtom,
@@ -28,5 +33,8 @@ export {
   lastPassedPipesAtom,
   pipesStateAtom,
   firstScoreReadySensorAtom,
-  restartingGameAtom
+  restartingGameAtom,
+  selectingBirdAtom,
+  previewingBirdAtom,
+  currentSkinAtom
 }

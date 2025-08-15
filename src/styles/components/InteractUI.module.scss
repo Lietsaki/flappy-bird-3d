@@ -173,6 +173,8 @@
         letter-spacing: 3px;
         text-shadow: 4px 4px 0 $black, -4px -4px 0 $black, 4px -4px 0 $black, -4px 4px 0 $black,
           6px 13px 0 $black;
+        pointer-events: auto;
+        user-select: none;
 
         -webkit-text-stroke: 1px $black;
       }
@@ -185,6 +187,31 @@
       row-gap: 20px;
 
       align-items: end;
+    }
+
+    .bird_selection_menu {
+      display: flex;
+      flex-direction: column;
+      margin-top: 60px;
+      row-gap: 20px;
+      align-items: end;
+
+      .birds_list {
+        display: flex;
+        flex-direction: column;
+        row-gap: 10px;
+        align-items: end;
+      }
+
+      .confirm_bird_buttons {
+        display: flex;
+        column-gap: 20px;
+
+        button {
+          min-width: unset;
+          width: 100px;
+        }
+      }
     }
 
     &.exiting_right_area {

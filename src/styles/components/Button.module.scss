@@ -6,6 +6,7 @@
   border: none;
   width: max-content;
   min-width: 220px;
+  position: relative;
 
   .btn_content {
     background-color: $orange;
@@ -19,6 +20,24 @@
     text-shadow: 2px 2px 0px $dark_orange;
   }
 
+  &.btn_selected {
+    &::before {
+      content: '>';
+      position: absolute;
+      left: -20px;
+
+      color: $white;
+      font-size: 45px;
+      text-shadow: 2px 2px 0px $dark_orange;
+      animation: swingLeft 1s ease-in-out infinite;
+    }
+  }
+
+  &:focus-visible {
+    outline: 4px solid $white;
+    outline-offset: 4px;
+  }
+
   &:hover {
     cursor: pointer;
   }
@@ -26,5 +45,14 @@
   &:active {
     transform: scale(0.98);
     transform-origin: bottom;
+  }
+
+  &:disabled {
+    filter: grayscale(80%) brightness(90%);
+    cursor: not-allowed;
+
+    &:active {
+      transform: none;
+    }
   }
 }
