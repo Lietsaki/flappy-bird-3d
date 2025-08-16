@@ -121,8 +121,9 @@ const InteractUI = () => {
     setJustUnlockedSkin('')
   }
 
-  const backToMenu = () => {
-    console.log('backToMenu')
+  const restartGameAndSelectBird = () => {
+    restartGame()
+    goToSelectBird()
   }
 
   const getBirdSelection = () => {
@@ -172,7 +173,7 @@ const InteractUI = () => {
 
     return (
       <div className={main_menu}>
-        <Button text="Leaderboard" onClick={() => ''} />
+        {/* <Button text="Leaderboard" onClick={() => ''} /> */}
         <Button text="Select bird" onClick={goToSelectBird} />
       </div>
     )
@@ -277,7 +278,7 @@ const InteractUI = () => {
 
           <div className={game_over_buttons}>
             <Button text="Restart" onClick={restartGame} />
-            <Button text="Main menu" onClick={backToMenu} />
+            <Button text="Select bird" onClick={restartGameAndSelectBird} />
           </div>
         </div>
       )

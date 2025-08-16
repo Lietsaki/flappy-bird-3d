@@ -33,6 +33,7 @@ const JUMP_POWER = 28 // how fast we go up
 const FALLING_BIRD_ROTATION_LIMIT = -1.3
 const ACTIVATE_FALLING_ANIMATION_ROTATION_LIMIT = -0.7
 const LAST_SCORES_LENGTH = 2
+const BIRD_MAX_Y = 35
 
 const GAME_OVER_CAMERA_ROTATIONS = {
   X: {
@@ -385,6 +386,7 @@ const Bird = () => {
       }
 
       // 5) Apply jump velocity
+      if (bird_body.current.position.y > BIRD_MAX_Y) return
       bird_body.current.position.y += jump_velocity.current.y * safeDelta
     }
   })
