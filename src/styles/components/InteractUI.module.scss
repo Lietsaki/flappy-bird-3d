@@ -219,7 +219,8 @@
     }
   }
 
-  .start_message {
+  .start_message,
+  .unlocked_bird_message {
     grid-column: 1 /4;
     grid-row: 3 / 4;
 
@@ -244,8 +245,13 @@
     }
   }
 
+  .unlocked_bird_message {
+    align-items: start;
+    margin-bottom: 0vh;
+  }
+
   .unlockable_bird_hint {
-    grid-column: 1 /4;
+    grid-column: 1 / 4;
     grid-row: 2 / 3;
 
     display: flex;

@@ -18,10 +18,12 @@ const gameOverAtom = atom(false)
 const restartingGameAtom = atom(false)
 
 const scoreAtom = atom(0)
+const lastScoresAtom = atom<number[]>([])
 
 const selectingBirdAtom = atom(false)
 const previewingBirdAtom = atom(bird_skins[0].id)
 const currentSkinAtom = atom(bird_skins[0].id)
+const justUnlockedSkinAtom = atom('')
 
 export {
   showHelpersAtom,
@@ -30,11 +32,13 @@ export {
   playingAtom,
   gameOverAtom,
   scoreAtom,
+  lastScoresAtom,
   lastPassedPipesAtom,
   pipesStateAtom,
   firstScoreReadySensorAtom,
   restartingGameAtom,
   selectingBirdAtom,
   previewingBirdAtom,
-  currentSkinAtom
+  currentSkinAtom,
+  justUnlockedSkinAtom
 }

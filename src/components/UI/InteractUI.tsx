@@ -3,6 +3,7 @@ import Button from './Button'
 import {
   currentSkinAtom,
   gameOverAtom,
+  justUnlockedSkinAtom,
   playingAtom,
   previewingBirdAtom,
   restartingGameAtom,
@@ -13,7 +14,12 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
 import bird_skins from '../../../public/character_data/bird_skins.json'
-import { isSkinUnlocked } from '../../db/localStorage'
+import {
+  getLastSelectedSkin,
+  getHighestScore,
+  isSkinUnlocked,
+  saveLastSelectedSkin
+} from '../../db/localStorage'
 
 const {
   interact_ui,
@@ -40,7 +46,8 @@ const {
   bird_selection_menu,
   birds_list,
   confirm_bird_buttons,
-  unlockable_bird_hint
+  unlockable_bird_hint,
+  unlocked_bird_message
 } = styles
 
 const InteractUI = () => {
@@ -59,8 +66,16 @@ const InteractUI = () => {
   const [selectingBird, setSelectingBird] = useAtom(selectingBirdAtom)
   const [previewingBird, setPreviewingBird] = useAtom(previewingBirdAtom)
   const [currentSkin, setCurrentSkin] = useAtom(currentSkinAtom)
+  const [justUnlockedSkin, setJustUnlockedSkin] = useAtom(justUnlockedSkinAtom)
 
-  // 1) Manage showing/exiting UI state variables
+  // 1) Fetch last selected skin from localStorage
+  useEffect(() => {
+    const current_skin = getLastSelectedSkin()
+    setPreviewingBird(current_skin)
+    setCurrentSkin(current_skin)
+  }, [setCurrentSkin, setPreviewingBird])
+
+  // 2) Manage showing/exiting UI state variables
   useEffect(() => {
     const updateUI = async () => {
       if (playing) {
@@ -74,7 +89,7 @@ const InteractUI = () => {
     updateUI()
   }, [playing])
 
-  // 2) Animate game over text
+  // 3) Animate game over text
   useEffect(() => {
     if (!gameOver) return
 
@@ -103,6 +118,7 @@ const InteractUI = () => {
     setRestartingGame(true)
     setShowingGameOverModal(false)
     setShowingUI(true)
+    setJustUnlockedSkin('')
   }
 
   const backToMenu = () => {
@@ -112,13 +128,14 @@ const InteractUI = () => {
   const getBirdSelection = () => {
     if (!selectingBird) return null
 
-    const selectBird = (id: string) => {
+    const previewBird = (id: string) => {
       setPreviewingBird(id)
     }
 
     const confirmBird = () => {
       if (!isSkinUnlocked(previewingBird)) return
       setCurrentSkin(previewingBird)
+      saveLastSelectedSkin(previewingBird)
       setSelectingBird(false)
     }
 
@@ -135,7 +152,7 @@ const InteractUI = () => {
               <Button
                 key={skin.id}
                 text={skin.name}
-                onClick={() => selectBird(skin.id)}
+                onClick={() => previewBird(skin.id)}
                 is_selected={previewingBird === skin.id}
               />
             )
@@ -204,6 +221,19 @@ const InteractUI = () => {
     )
   }
 
+  const getUnlockedBirdMessage = () => {
+    if (!showingGameOverModal || !justUnlockedSkin) return null
+
+    const skin_data = bird_skins.find((skin) => skin.id === justUnlockedSkin)
+    if (!skin_data) return null
+
+    return (
+      <div className={unlocked_bird_message}>
+        <span>{skin_data.name} bird unlocked!</span>
+      </div>
+    )
+  }
+
   const getScoreText = () => {
     if (!playing) return null
 
@@ -240,7 +270,7 @@ const InteractUI = () => {
                 <div className={game_over_modal_number}>{score}</div>
 
                 <div className={game_over_modal_text}>Best</div>
-                <div className={game_over_modal_number}>1</div>
+                <div className={game_over_modal_number}>{getHighestScore()}</div>
               </div>
             </div>
           </div>
@@ -269,6 +299,7 @@ const InteractUI = () => {
 
       {getStartMessage()}
       {getUnlockableBirdHint()}
+      {getUnlockedBirdMessage()}
     </div>
   )
 }

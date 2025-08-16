@@ -8,7 +8,9 @@ import {
   currentSkinAtom,
   firstScoreReadySensorAtom,
   gameOverAtom,
+  justUnlockedSkinAtom,
   lastPassedPipesAtom,
+  lastScoresAtom,
   pipesStateAtom,
   playingAtom,
   previewingBirdAtom,
@@ -21,6 +23,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { getRandomNumber } from '../helpers/helper_functions'
 import bird_skins from '../../public/character_data/bird_skins.json'
+import { isSkinUnlocked, saveHighestScore, unlockSkin } from '../db/localStorage'
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
@@ -29,6 +32,7 @@ const JUMP_DECIMATE_POWER = 50 // how fast we are pulled down
 const JUMP_POWER = 28 // how fast we go up
 const FALLING_BIRD_ROTATION_LIMIT = -1.3
 const ACTIVATE_FALLING_ANIMATION_ROTATION_LIMIT = -0.7
+const LAST_SCORES_LENGTH = 2
 
 const GAME_OVER_CAMERA_ROTATIONS = {
   X: {
@@ -75,11 +79,13 @@ const Bird = () => {
   const [playing, setPlaying] = useAtom(playingAtom)
   const [gameOver, setGameOver] = useAtom(gameOverAtom)
   const [score, setScore] = useAtom(scoreAtom)
+  const [lastScores, setLastScores] = useAtom(lastScoresAtom)
   const [restartingGame] = useAtom(restartingGameAtom)
 
   const [selectingBird] = useAtom(selectingBirdAtom)
   const [previewingBird] = useAtom(previewingBirdAtom)
   const [currentSkin] = useAtom(currentSkinAtom)
+  const [, setJustUnlockedSkin] = useAtom(justUnlockedSkinAtom)
 
   const bird_textures = useTexture({
     classic_bird_texture: '/textures/classic_bird_texture.png',
@@ -272,6 +278,28 @@ const Bird = () => {
     camera_target_rotation.current = { x: getRandomNumber(X.min, X.max), y: getRandomNumber(Y.min, Y.max) }
   }
 
+  const unlockBirds = (last_scores: number[]) => {
+    for (const skin of bird_skins) {
+      if (isSkinUnlocked(skin.id)) continue
+
+      if (score >= skin.unlocks_at && !skin.must_get_score_consecutively) {
+        unlockSkin(skin.id)
+        setJustUnlockedSkin(skin.id)
+        return
+      }
+
+      if (
+        skin.must_get_score_consecutively &&
+        last_scores[last_scores.length - 1] === skin.unlocks_at &&
+        last_scores[last_scores.length - 2] === skin.unlocks_at
+      ) {
+        unlockSkin(skin.id)
+        setJustUnlockedSkin(skin.id)
+        return
+      }
+    }
+  }
+
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
     const safeDelta = Math.min(delta, 0.01)
@@ -298,6 +326,12 @@ const Bird = () => {
           setShowingImpact(true)
           changeAction('bird_hurt_1', false, 0.001)
           setupCameraRotation()
+          saveHighestScore(score)
+
+          const last_scores = [...lastScores, score]
+          if (last_scores.length > LAST_SCORES_LENGTH) last_scores.shift()
+          setLastScores(last_scores)
+          unlockBirds(last_scores)
         } else if (type === 'sensor') {
           setLastPassedPipes(name)
 
