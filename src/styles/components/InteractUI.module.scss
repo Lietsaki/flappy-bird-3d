@@ -41,6 +41,8 @@
       text-shadow: 4px 4px 0 $black, -4px -4px 0 $black, 4px -4px 0 $black, -4px 4px 0 $black,
         -7px 13px 0 $black;
 
+      text-align: center;
+
       :nth-child(1) {
         animation: comeFromLeftSide 0.5s ease-in-out;
       }
@@ -58,6 +60,16 @@
         :nth-child(2) {
           animation: exitToLeftSide 0.4s ease-in-out;
           transform: translateX(-60vw);
+        }
+
+        @media (max-width: 900px) {
+          :nth-child(1) {
+            transform: translateX(100vw);
+          }
+
+          :nth-child(2) {
+            transform: translateX(-100vw);
+          }
         }
       }
     }
@@ -118,8 +130,10 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-
-        padding: 5px 0px;
+        justify-content: center;
+        row-gap: 7px;
+        padding: 0px 0px 8px 0px;
+        line-height: 1;
 
         .game_over_modal_text {
           @include ds-font;
@@ -221,7 +235,7 @@
 
   .start_message,
   .unlocked_bird_message {
-    grid-column: 1 /4;
+    grid-column: 1 / 4;
     grid-row: 3 / 4;
 
     display: flex;
@@ -238,6 +252,8 @@
       padding: 0px 10px;
       text-shadow: 2px 2px 0px $dark_orange;
       animation: blink 2s infinite ease-in-out;
+      text-align: center;
+      position: relative;
 
       &.exiting_start_message {
         animation: goUpAndDown 1s ease-in-out;
@@ -267,6 +283,136 @@
       padding: 0px 10px;
       text-shadow: 2px 2px 0px $dark_orange;
       animation: blink 2s infinite ease-in-out;
+      text-align: center;
+      position: relative;
+    }
+  }
+
+  @include phones {
+    .right_area {
+      margin-right: 30px;
+
+      .game_title_area {
+        font-size: 50px;
+      }
+    }
+
+    .unlockable_bird_hint {
+      grid-row: 3 / 4;
+      align-items: start;
+
+      span {
+        font-size: 35px;
+      }
+    }
+
+    .start_message,
+    .unlocked_bird_message {
+      span {
+        font-weight: 500;
+        padding: 0 20px;
+      }
+    }
+  }
+
+  @include small-phones {
+    .right_area {
+      margin-top: 30px;
+
+      .game_title_area {
+        font-size: 45px;
+      }
+
+      .main_menu {
+        margin-top: 40px;
+      }
+    }
+
+    .unlockable_bird_hint {
+      align-items: center;
+
+      span {
+        top: 20px;
+        font-size: 35px;
+      }
+    }
+  }
+
+  @include landscape-phones {
+    .central_area {
+      .score_text {
+        top: 40px;
+        font-size: 40px;
+      }
+
+      .game_over_text {
+        top: 60px;
+      }
+
+      .game_over_modal_area {
+        row-gap: 30px;
+        top: 60px;
+
+        .game_over_modal {
+          width: 120px;
+          height: 170px;
+
+          .game_over_modal_text {
+            font-size: 30px;
+          }
+
+          .game_over_modal_number {
+            font-size: 30px;
+            text-shadow: 3px 3px 0 #000, -2px -3px 0 #000, 3px -3px 0 #000, -2px 3px 0 #000;
+          }
+        }
+      }
+    }
+
+    .right_area {
+      margin-top: 20px;
+      margin-right: 30px;
+
+      .game_title_area {
+        font-size: 40px;
+
+        .game_title {
+          text-shadow: 4px 4px 0 $black, -4px -4px 0 $black, 4px -4px 0 $black, -4px 4px 0 $black,
+            6px 8px 0 $black;
+        }
+      }
+
+      .main_menu,
+      .bird_selection_menu {
+        margin-top: 20px;
+      }
+    }
+
+    .start_message,
+    .unlocked_bird_message,
+    .unlockable_bird_hint {
+      align-items: center;
+
+      span {
+        font-weight: 500;
+        padding: 0 20px;
+        font-size: 30px;
+        bottom: 22px;
+      }
+    }
+
+    .unlockable_bird_hint {
+      grid-row: 3 / 4;
+
+      span {
+        top: 20px;
+      }
+    }
+
+    .unlocked_bird_message {
+      span {
+        bottom: 65px;
+      }
     }
   }
 }

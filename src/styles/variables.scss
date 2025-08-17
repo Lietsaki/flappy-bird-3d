@@ -31,6 +31,25 @@ $peach: #fc7858;
   font-family: '04B', sans-serif;
 }
 
+// MEDIA QUERIES
+@mixin phones {
+  @media (max-width: 500px) {
+    @content;
+  }
+}
+
+@mixin small-phones {
+  @media (max-width: 376px) {
+    @content;
+  }
+}
+
+@mixin landscape-phones {
+  @media (max-height: 450px) and (min-width: 500px) {
+    @content;
+  }
+}
+
 // KEYFRAMES
 @keyframes blink {
   0% {
@@ -117,6 +136,32 @@ $peach: #fc7858;
   }
   100% {
     transform: translateX(-60vw);
+  }
+}
+
+@media (max-width: 900px) {
+  @keyframes exitToRightSide {
+    0% {
+      transform: translateX(0vw);
+    }
+    20% {
+      transform: translateX(-2vw);
+    }
+    100% {
+      transform: translateX(100vw);
+    }
+  }
+
+  @keyframes exitToLeftSide {
+    0% {
+      transform: translateX(0vw);
+    }
+    20% {
+      transform: translateX(2vw);
+    }
+    100% {
+      transform: translateX(-100vw);
+    }
   }
 }
 

@@ -102,7 +102,7 @@ const InteractUI = () => {
       setShowingGameOverModal(true)
       setGameOverTextEntering(false)
 
-      await wait(500)
+      await wait(410)
       setGameOverTextExiting(false)
     }
 
@@ -236,7 +236,7 @@ const InteractUI = () => {
   }
 
   const getScoreText = () => {
-    if (!playing) return null
+    if (!playing || showingUI) return null
 
     return (
       <div className={central_area}>

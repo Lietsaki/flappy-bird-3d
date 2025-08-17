@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRef } from 'react'
 import * as THREE from 'three'
 import { Object3D } from 'three'
-import { useHelper } from '@react-three/drei'
+// import { useHelper } from '@react-three/drei'
 
 import { useAtom } from 'jotai'
 import {
@@ -22,7 +22,7 @@ import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
 import { getRandomNumber } from '../helpers/helper_functions'
 
-const TOTAL_PLATFORMS = 6
+const TOTAL_PLATFORMS = 7
 const DISTANCE_BETWEEN_PIPES = 16.02
 const PIPES_Y_OFFSET = 20
 const BBOX_COLLISION_COLOR = 'yellow'
@@ -56,7 +56,7 @@ const NewYork = () => {
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
 
   // This typing error doesn't affect us
-  useHelper(directional_light_ref, THREE.DirectionalLightHelper, 1, 'red')
+  // useHelper(directional_light_ref, THREE.DirectionalLightHelper, 1, 'red')
 
   const addBboxes = useCallback(
     (objects: THREE.Object3D[]) => {
@@ -333,9 +333,9 @@ const NewYork = () => {
   useEffect(() => {
     if (platformSlices.current.length !== 1 || !sceneChildren.length) return
 
-    const updatedPlatforms2 = addPlatform(TOTAL_PLATFORMS - 1)!
-    setBbMap({ ...bbMap, ...updatedPlatforms2.updatedBbMap })
-    setSceneChildren([...sceneChildren, ...updatedPlatforms2.updatedSceneChildren])
+    const updatedPlatforms = addPlatform(TOTAL_PLATFORMS - 1)!
+    setBbMap({ ...bbMap, ...updatedPlatforms.updatedBbMap })
+    setSceneChildren([...sceneChildren, ...updatedPlatforms.updatedSceneChildren])
   }, [addPlatform, bbMap, sceneChildren, setBbMap])
 
   // 3) Trigger pipes opening when we start playing

@@ -55,4 +55,21 @@
       transform: none;
     }
   }
+
+  @include small-phones {
+    min-width: 200px;
+
+    .btn_content {
+      font-size: 30px;
+    }
+  }
+
+  @include landscape-phones {
+    min-width: 200px;
+
+    .btn_content {
+      font-size: 25px;
+      border: 3px solid $white;
+    }
+  }
 }
