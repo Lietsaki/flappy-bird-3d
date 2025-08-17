@@ -18,7 +18,7 @@ import {
   playingAtom,
   restartingGameAtom
 } from '../store/store'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
 import { getRandomNumber } from '../helpers/helper_functions'
 
@@ -32,6 +32,8 @@ const TERRAINS_OFFSET = 0.04
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
+  const bg_texture = useLoader(THREE.TextureLoader, '/backgrounds/bg_texture.png')
+
   const [sceneChildren, setSceneChildren] = useState<SceneChild[]>([])
   const platformSlices = useRef<PlatformSlice[]>([])
   const [dlightPosition] = useState(new THREE.Vector3(5, 15, 15))
@@ -46,7 +48,7 @@ const NewYork = () => {
   const [gameOver] = useAtom(gameOverAtom)
   const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
 
-  const { scene } = useThree()
+  const { scene, clock } = useThree()
 
   const aux_vec3_1 = useRef(new THREE.Vector3())
   const base_bottom_pipe_y = useRef(0)
@@ -126,6 +128,10 @@ const NewYork = () => {
 
   // 1) Populate scene children & setup first slice
   useEffect(() => {
+    bg_texture.colorSpace = THREE.SRGBColorSpace
+    bg_texture.needsUpdate = true
+    scene.background = bg_texture
+
     // SET MIN FILTER IN THE TEXTURES THAT REQUIRE IT
     const NYC_material = model.materials.nyc_material as THREE.MeshStandardMaterial
     NYC_material.map!.minFilter = THREE.LinearFilter
@@ -170,6 +176,9 @@ const NewYork = () => {
     })
 
     const processedSceneChildren = model.scene.children.map((child) => {
+      child.userData.baseY = child.position.y
+      child.userData.phase = Math.random() * Math.PI * 2
+
       return {
         object: child,
         element: <primitive object={child} key={child.id} />
@@ -178,7 +187,7 @@ const NewYork = () => {
 
     setBbMap(boundingBoxesMap)
     setSceneChildren(processedSceneChildren)
-  }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes])
+  }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes, bg_texture])
 
   const addOffsetsToPlatform = (platform: PlatformSlice, applyOffsetsMap = [true, true]) => {
     const pair_1_offset = getRandomNumber(4, 6)
@@ -544,6 +553,123 @@ const NewYork = () => {
     }
   }
 
+  const updatebackground = (delta: number) => {
+    const generic_buildings = model.scene.children.filter((child) =>
+      child.name.includes('generic_buildings_group')
+    )
+    const special_buildings = model.scene.children.filter((child) => child.name.includes('sp_'))
+    const bg_clouds = model.scene.children.filter((child) => child.name.includes('bg_clouds'))
+    const owtc_clouds = model.scene.children.filter((child) => child.name.includes('owtc_clouds'))
+    const empire_state_clouds = model.scene.children.filter((child) =>
+      child.name.includes('empire_state_clouds')
+    )
+    const central_park_clouds = model.scene.children.filter((child) =>
+      child.name.includes('central_park_clouds')
+    )
+    const brooklyn_clouds = model.scene.children.filter((child) => child.name.includes('brooklyn_clouds'))
+    const chrysler_clouds = model.scene.children.filter((child) => child.name.includes('chrysler_clouds'))
+    const cloud_discs = model.scene.children.filter((child) => child.name.includes('cloud_disc'))
+    const bushes = model.scene.children.find((child) => child.name === 'bushes') as THREE.Object3D
+
+    const generic_buildings_vel = (playing ? 0.2 : 0.1) * delta
+    const special_buildings_vel = (playing ? 0.3 : 0.2) * delta
+    const bush_vel = (playing ? 1 : 0.5) * delta
+
+    const BUILDINGS_LOOP_TRIGGER = LOOP_TRIGGER + 30
+    const BUILDINGS_RESTART_POSITION = 15
+
+    const BUSH_LOOP_TRIGGER = LOOP_TRIGGER - 50
+    const BUSH_RESTART_POSITION = 20
+
+    for (const building of generic_buildings) {
+      building.position.x -= generic_buildings_vel
+
+      if (building.position.x < BUILDINGS_LOOP_TRIGGER) {
+        building.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const building of special_buildings) {
+      building.position.x -= special_buildings_vel
+
+      if (building.position.x < BUILDINGS_LOOP_TRIGGER) {
+        building.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const cloud of bg_clouds) {
+      const bg_clouds_vel = (playing ? getRandomNumber(0.5, 0.9) : getRandomNumber(0.2, 0.5)) * delta
+      cloud.position.x -= bg_clouds_vel
+      cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.12
+
+      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
+        cloud.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const cloud of owtc_clouds) {
+      const owtc_clouds_vel = (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      cloud.position.x -= owtc_clouds_vel
+      cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
+
+      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
+        cloud.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const cloud of empire_state_clouds) {
+      const empire_state_clouds_vel =
+        (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      cloud.position.x -= empire_state_clouds_vel
+      cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
+
+      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
+        cloud.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const cloud of central_park_clouds) {
+      const central_park_clouds_vel =
+        (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      cloud.position.x -= central_park_clouds_vel
+      cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
+
+      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
+        cloud.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const cloud of brooklyn_clouds) {
+      const brooklyn_clouds_vel = (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      cloud.position.x -= brooklyn_clouds_vel
+      cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
+
+      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
+        cloud.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const cloud of chrysler_clouds) {
+      const chrysler_clouds_vel = (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      cloud.position.x -= chrysler_clouds_vel
+      cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
+
+      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
+        cloud.position.x = BUILDINGS_RESTART_POSITION
+      }
+    }
+
+    for (const disc of cloud_discs) {
+      disc.rotation.y += 0.002 * delta * disc.userData.phase
+    }
+
+    bushes.position.x -= bush_vel
+
+    if (bushes.position.x < BUSH_LOOP_TRIGGER) {
+      bushes.position.x = BUSH_RESTART_POSITION
+    }
+  }
+
   useFrame((_state, delta) => {
     if (directional_light_ref.current) {
       directional_light_ref.current.position.copy(dlightPosition)
@@ -551,10 +677,10 @@ const NewYork = () => {
 
     if (!bbMap || gameOver) return
 
-    const safeDelta = Math.min(delta, 0.01)
+    const safe_delta = Math.min(delta, 0.01)
 
-    const game_vel = (playing ? 5 : 3) * safeDelta
-    const pipes_y_vel = 40 * safeDelta
+    const game_vel = (playing ? 5 : 3) * safe_delta
+    const pipes_y_vel = 40 * safe_delta
 
     for (let i = 0; i < platformSlices.current.length; i++) {
       const platform = platformSlices.current[i]
@@ -588,6 +714,8 @@ const NewYork = () => {
       setPipesState('idle')
       setRestartingGame(false)
     }
+
+    updatebackground(safe_delta)
   })
 
   return (

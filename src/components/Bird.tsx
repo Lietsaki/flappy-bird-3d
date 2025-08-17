@@ -22,7 +22,7 @@ import {
 import { useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { getRandomNumber } from '../helpers/helper_functions'
-import bird_skins from '../../public/character_data/bird_skins.json'
+import bird_skins from '../db/bird_skins.json'
 import { isSkinUnlocked, saveHighestScore, unlockSkin } from '../db/localStorage'
 
 const GLIDING_ANIMATION_TOP = 18
@@ -303,7 +303,7 @@ const Bird = () => {
 
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
-    const safeDelta = Math.min(delta, 0.01)
+    const safe_delta = Math.min(delta, 0.01)
 
     sceneChild.object.position.copy(bird_body.current.position)
     const updated_bird_bbox = collision_bbox.current.setFromObject(bird_body.current)
@@ -357,7 +357,7 @@ const Bird = () => {
 
     if (playing) {
       // 2) Apply gravity to the bird
-      bird_body.current.position.y -= FRAME_GRAVITY * safeDelta
+      bird_body.current.position.y -= FRAME_GRAVITY * safe_delta
 
       // 3) Rotate the bird forward as it falls. Also, animate it after a certain threshold
       if (sceneChild.object.rotation.z > FALLING_BIRD_ROTATION_LIMIT && !just_flapped_timeout.current) {
@@ -380,14 +380,14 @@ const Bird = () => {
 
       // 4) Decimate jump power with gravity
       if (jump_velocity.current.y > 0) {
-        jump_velocity.current.y -= JUMP_DECIMATE_POWER * safeDelta
+        jump_velocity.current.y -= JUMP_DECIMATE_POWER * safe_delta
       } else {
         jump_velocity.current.y = 0
       }
 
       // 5) Apply jump velocity
       if (bird_body.current.position.y > BIRD_MAX_Y) return
-      bird_body.current.position.y += jump_velocity.current.y * safeDelta
+      bird_body.current.position.y += jump_velocity.current.y * safe_delta
     }
   })
 

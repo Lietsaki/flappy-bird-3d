@@ -1,7 +1,7 @@
 import { atom } from 'jotai'
 import * as dat from 'lil-gui'
 import type { BoundingBoxesMap, PipesState, ScoreReadySensor } from '../types/general_types'
-import bird_skins from '../../public/character_data/bird_skins.json'
+import bird_skins from '../db/bird_skins.json'
 
 const SHOW_HELPERS = true
 const showHelpersAtom = atom(SHOW_HELPERS)

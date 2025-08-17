@@ -1,4 +1,4 @@
-import bird_skins from '../../public/character_data/bird_skins.json'
+import bird_skins from './bird_skins.json'
 
 const HIGHEST_SCORE = 'highest_score'
 const UNLOCKED_SKINS = 'skins'

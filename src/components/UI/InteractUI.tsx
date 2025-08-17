@@ -13,7 +13,7 @@ import {
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { wait } from '../../helpers/helper_functions'
-import bird_skins from '../../../public/character_data/bird_skins.json'
+import bird_skins from '../../db/bird_skins.json'
 import {
   getLastSelectedSkin,
   getHighestScore,
