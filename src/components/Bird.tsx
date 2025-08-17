@@ -28,7 +28,7 @@ import { isSkinUnlocked, saveHighestScore, unlockSkin } from '../db/localStorage
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
 const FRAME_GRAVITY = 8
-const JUMP_DECIMATE_POWER = 50 // how fast we are pulled down
+const JUMP_DECIMATE_POWER = 90 // how fast we are pulled down
 const JUMP_POWER = 28 // how fast we go up
 const FALLING_BIRD_ROTATION_LIMIT = -1.3
 const ACTIVATE_FALLING_ANIMATION_ROTATION_LIMIT = -0.7
@@ -303,7 +303,7 @@ const Bird = () => {
 
   useFrame((_state, delta) => {
     if (!sceneChild || !bird_body.current) return
-    const safe_delta = Math.min(delta, 0.01)
+    const safe_delta = Math.min(delta, 0.1)
 
     sceneChild.object.position.copy(bird_body.current.position)
     const updated_bird_bbox = collision_bbox.current.setFromObject(bird_body.current)

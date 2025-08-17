@@ -677,9 +677,9 @@ const NewYork = () => {
 
     if (!bbMap || gameOver) return
 
-    const safe_delta = Math.min(delta, 0.01)
+    const safe_delta = Math.min(delta, 0.1)
 
-    const game_vel = (playing ? 5 : 3) * safe_delta
+    const game_vel = (playing ? 9 : 3) * safe_delta
     const pipes_y_vel = 40 * safe_delta
 
     for (let i = 0; i < platformSlices.current.length; i++) {
