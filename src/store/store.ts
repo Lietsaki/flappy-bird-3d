@@ -3,7 +3,7 @@ import * as dat from 'lil-gui'
 import type { BoundingBoxesMap, PipesState, ScoreReadySensor } from '../types/general_types'
 import bird_skins from '../db/bird_skins.json'
 
-const SHOW_HELPERS = true
+const SHOW_HELPERS = false
 const showHelpersAtom = atom(SHOW_HELPERS)
 
 const guiAtom = atom(SHOW_HELPERS ? new dat.GUI({ closeFolders: false }) : null)
