@@ -27,9 +27,9 @@ import { isSkinUnlocked, saveHighestScore, unlockSkin } from '../db/localStorage
 
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
-const FRAME_GRAVITY = 8
-const JUMP_DECIMATE_POWER = 90 // how fast we are pulled down
-const JUMP_POWER = 28 // how fast we go up
+const FRAME_GRAVITY = 18
+const JUMP_DECIMATE_POWER = 70 // how fast we are pulled down
+const JUMP_POWER = 38 // how fast we go up
 const FALLING_BIRD_ROTATION_LIMIT = -1.3
 const ACTIVATE_FALLING_ANIMATION_ROTATION_LIMIT = -0.7
 const LAST_SCORES_LENGTH = 2
@@ -260,11 +260,12 @@ const Bird = () => {
     if (!bird_body.current || !showingImpact) return null
     const { x, y } = bird_body.current.position
 
+    // For some reason scale must be larger in prod mode to get the same result
     return (
       <SpriteAnimator
         position={[x, y, 20]}
         startFrame={0}
-        scale={3}
+        scale={process.env.NODE_ENV === 'development' ? 3 : 7}
         asSprite={true}
         fps={30}
         textureImageURL={'/sprites/impact.png'}

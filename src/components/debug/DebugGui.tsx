@@ -1,4 +1,4 @@
-import { OrbitControls } from '@react-three/drei'
+// import { OrbitControls } from '@react-three/drei'
 import { Stats } from '@react-three/drei'
 import { showHelpersAtom } from '../../store/store'
 import { useAtom } from 'jotai'
