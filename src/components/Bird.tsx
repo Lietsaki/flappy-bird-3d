@@ -322,7 +322,7 @@ const Bird = () => {
       const intersection = updated_bird_bbox.intersectsBox(bbox)
 
       if (intersection) {
-        if (type === 'collision' && playing && pipesState === 'playing') {
+        if (type === 'collision' && playing && (pipesState === 'playing' || name.includes('floor'))) {
           setPlaying(false)
           setGameOver(true)
           setShowingImpact(true)
