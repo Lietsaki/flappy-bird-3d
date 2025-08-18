@@ -8,7 +8,8 @@ import Bird from './components/Bird'
 import DebugGui from './components/debug/DebugGui'
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
-import { selectingBirdAtom } from './store/store'
+import { boundingBoxesMapAtom, selectingBirdAtom } from './store/store'
+import { wait } from './helpers/helper_functions'
 
 const BASE_CAMERA_POSITION: THREE.Vector3Tuple = [-25, 13.8, 0]
 
@@ -66,8 +67,57 @@ const CameraManagement = () => {
 }
 
 const App = () => {
+  const [bbMap] = useAtom(boundingBoxesMapAtom)
+  const dot1_ref = useRef<HTMLSpanElement>(null)
+  const dot2_ref = useRef<HTMLSpanElement>(null)
+  const dot3_ref = useRef<HTMLSpanElement>(null)
+  const [loadingScreenDone, setLoadingScreenDone] = useState(false)
+
+  useEffect(() => {
+    const animate_dot = 'animate_dot'
+
+    const startDotsAnimation = async () => {
+      dot1_ref.current?.classList.add(animate_dot)
+      await wait(200)
+      dot2_ref.current?.classList.add(animate_dot)
+      await wait(200)
+      dot3_ref.current?.classList.add(animate_dot)
+    }
+
+    const endDotsAnimation = async () => {
+      dot1_ref.current?.classList.remove(animate_dot)
+      dot2_ref.current?.classList.remove(animate_dot)
+      dot3_ref.current?.classList.remove(animate_dot)
+
+      await wait(300)
+      setLoadingScreenDone(true)
+    }
+
+    if (!bbMap) {
+      startDotsAnimation()
+    } else {
+      endDotsAnimation()
+    }
+  }, [bbMap])
+
+  const getLoadingScreen = () => {
+    if (loadingScreenDone) return null
+
+    return (
+      <div className={`loading_screen ${bbMap ? 'exit' : ''}`}>
+        <div>
+          Loading
+          <span ref={dot1_ref}>.</span>
+          <span ref={dot2_ref}>.</span>
+          <span ref={dot3_ref}>.</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
+      {getLoadingScreen()}
       <Canvas gl={{ toneMapping: THREE.LinearToneMapping, antialias: true }}>
         <CameraManagement />
         <DebugGui />

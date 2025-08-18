@@ -30,3 +30,47 @@ body,
 canvas {
   user-select: none;
 }
+
+.loading_screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: $sky_bg;
+
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &.exit {
+    animation: goUp 0.2s ease-in-out;
+    transform: translateY(-100%);
+  }
+
+  & > div {
+    font-size: 40px;
+    @include bold-font;
+    color: $white;
+    letter-spacing: 10px;
+    text-transform: uppercase;
+
+    @include phones {
+      font-size: 35px;
+    }
+
+    span {
+      margin: 0px 2px;
+      font-size: 40px;
+
+      &:first-child {
+        margin-left: 3px;
+      }
+
+      &.animate_dot {
+        animation: fadeInOpacity 1s ease-in-out infinite;
+      }
+    }
+  }
+}
