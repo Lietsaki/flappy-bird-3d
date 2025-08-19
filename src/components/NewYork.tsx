@@ -511,7 +511,7 @@ const NewYork = () => {
 
     const pipe_y_target = platform.pipe_y_targets[pipe_i]
     const pipe_y = pipe.position.y
-    const pipe_target_offset = 0.2
+    const pipe_target_offset = 0.3
 
     const reached_target =
       pipe_y_target > pipe.position.y
@@ -680,7 +680,7 @@ const NewYork = () => {
     const safe_delta = Math.min(delta, 0.1)
 
     const game_vel = (playing ? 9 : 3) * safe_delta
-    const pipes_y_vel = 28 * safe_delta
+    const pipes_y_vel = 26 * safe_delta
 
     for (let i = 0; i < platformSlices.current.length; i++) {
       const platform = platformSlices.current[i]

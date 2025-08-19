@@ -288,6 +288,12 @@
     }
   }
 
+  @include smaller-height-devices {
+    .unlocked_bird_message {
+      align-items: center;
+    }
+  }
+
   @include phones {
     .right_area {
       margin-right: 30px;
