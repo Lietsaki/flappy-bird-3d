@@ -107,13 +107,11 @@ const Bird = () => {
       }
 
       if (currentAction && currentClip && currentClip.name !== animation_name) {
-        currentAction.fadeOut(fadeDuration)
-
-        const animation = animations.actions[animation_name]!.reset().fadeIn(fadeDuration)
+        const animation = animations.actions[animation_name]!.reset()
         if (play_once) animation.loop = THREE.LoopOnce
         animation.timeScale = BIRD_ANIMATION_SPEEDMAP[animation_name]
 
-        setCurrentAction(animation.play())
+        setCurrentAction(animation.crossFadeFrom(currentAction, fadeDuration, true).play())
       }
     },
     [currentAction, animations]
