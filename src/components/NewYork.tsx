@@ -608,7 +608,7 @@ const NewYork = () => {
     }
 
     for (const cloud of owtc_clouds) {
-      const owtc_clouds_vel = (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      const owtc_clouds_vel = (playing ? getRandomNumber(0.3, 0.33) : getRandomNumber(0.2, 0.23)) * delta
       cloud.position.x -= owtc_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
@@ -619,7 +619,7 @@ const NewYork = () => {
 
     for (const cloud of empire_state_clouds) {
       const empire_state_clouds_vel =
-        (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+        (playing ? getRandomNumber(0.3, 0.32) : getRandomNumber(0.2, 0.22)) * delta
       cloud.position.x -= empire_state_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
@@ -630,7 +630,7 @@ const NewYork = () => {
 
     for (const cloud of central_park_clouds) {
       const central_park_clouds_vel =
-        (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+        (playing ? getRandomNumber(0.3, 0.32) : getRandomNumber(0.2, 0.22)) * delta
       cloud.position.x -= central_park_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
@@ -640,7 +640,7 @@ const NewYork = () => {
     }
 
     for (const cloud of brooklyn_clouds) {
-      const brooklyn_clouds_vel = (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
+      const brooklyn_clouds_vel = (playing ? getRandomNumber(0.3, 0.32) : getRandomNumber(0.2, 0.22)) * delta
       cloud.position.x -= brooklyn_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
@@ -650,8 +650,7 @@ const NewYork = () => {
     }
 
     for (const cloud of chrysler_clouds) {
-      const chrysler_clouds_vel = (playing ? getRandomNumber(0.3, 0.35) : getRandomNumber(0.2, 0.25)) * delta
-      cloud.position.x -= chrysler_clouds_vel
+      cloud.position.x -= special_buildings_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
       if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {

@@ -98,11 +98,11 @@ const Bird = () => {
   const { scene, camera } = useThree()
 
   const changeAction = useCallback(
-    (animation_name: BirdAnimationName, play_once?: boolean, fadeDuration = 0.1) => {
+    (animation_name: BirdAnimationName, play_once?: boolean, fade_duration = 0.1) => {
       const currentClip = currentAction?.getClip()
 
       if (currentAction && currentClip && currentClip.name === animation_name) {
-        currentAction.time = 0
+        currentAction.reset()
         return
       }
 
@@ -111,7 +111,13 @@ const Bird = () => {
         if (play_once) animation.loop = THREE.LoopOnce
         animation.timeScale = BIRD_ANIMATION_SPEEDMAP[animation_name]
 
-        setCurrentAction(animation.crossFadeFrom(currentAction, fadeDuration, true).play())
+        for (const action of Object.values(animations.actions)) {
+          if (action && action.isRunning() && action.enabled && action.weight > 0) {
+            action.fadeOut(fade_duration)
+          }
+        }
+
+        setCurrentAction(animation.fadeIn(fade_duration).play())
       }
     },
     [currentAction, animations]
@@ -201,14 +207,10 @@ const Bird = () => {
       })
     }
 
-    if (playing && currentAction?.getClip().name === 'bird_idle') {
-      changeAction('bird_flap')
-    }
-
     return () => {
       if (tween) tween.kill()
     }
-  }, [changeAction, currentAction, gameOver, playing])
+  }, [gameOver, playing])
 
   // 4) Restart game logic
   useEffect(() => {
@@ -324,7 +326,7 @@ const Bird = () => {
           setPlaying(false)
           setGameOver(true)
           setShowingImpact(true)
-          changeAction('bird_hurt_1', false, 0.001)
+          changeAction('bird_hurt_1', false, 0.2)
           setupCameraRotation()
           saveHighestScore(score)
 
