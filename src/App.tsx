@@ -8,7 +8,7 @@ import Bird from './components/Bird'
 import DebugGui from './components/debug/DebugGui'
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
-import { boundingBoxesMapAtom, selectingBirdAtom } from './store/store'
+import { boundingBoxesMapAtom, MOBILE_WIDTH, selectingBirdAtom } from './store/store'
 import { wait } from './helpers/helper_functions'
 
 const BASE_CAMERA_POSITION: THREE.Vector3Tuple = [-25, 13.8, 0]
@@ -26,7 +26,7 @@ const CameraManagement = () => {
 
     setZoom(base_ratio.z * (size.height / base_ratio.h))
 
-    if (size.width < 600) {
+    if (size.width < MOBILE_WIDTH) {
       if (selectingBird) {
         camera_target_x.current = size.width < 400 ? -23.5 : -24
         return

@@ -14,6 +14,7 @@ import {
   gameOverAtom,
   guiAtom,
   lastPassedPipesAtom,
+  MOBILE_WIDTH,
   pipesStateAtom,
   playingAtom,
   restartingGameAtom
@@ -27,8 +28,15 @@ const DISTANCE_BETWEEN_PIPES = 16.02
 const PIPES_Y_OFFSET = 20
 const BBOX_COLLISION_COLOR = 'yellow'
 const BBOX_SENSOR_COLOR = 'crimson'
-const LOOP_TRIGGER = -150
 const TERRAINS_OFFSET = 0.04
+
+const LOOP_TRIGGER = -150
+const BUILDINGS_LOOP_TRIGGER = -120
+const BUILDINGS_RESTART_POSITION = 15
+const BUSH_LOOP_TRIGGER = -200
+const BUSH_LOOP_TRIGGER_MOBILE = -175
+const BUSH_RESTART_POSITION = 20
+const BUSH_RESTART_POSITION_MOBILE = -15
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
@@ -48,7 +56,7 @@ const NewYork = () => {
   const [gameOver] = useAtom(gameOverAtom)
   const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
 
-  const { scene, clock } = useThree()
+  const { scene, clock, size } = useThree()
 
   const aux_vec3_1 = useRef(new THREE.Vector3())
   const base_bottom_pipe_y = useRef(0)
@@ -575,12 +583,6 @@ const NewYork = () => {
     const special_buildings_vel = (playing ? 0.3 : 0.2) * delta
     const bush_vel = (playing ? 1 : 0.5) * delta
 
-    const BUILDINGS_LOOP_TRIGGER = LOOP_TRIGGER + 30
-    const BUILDINGS_RESTART_POSITION = 15
-
-    const BUSH_LOOP_TRIGGER = LOOP_TRIGGER - 50
-    const BUSH_RESTART_POSITION = 20
-
     for (const building of generic_buildings) {
       building.position.x -= generic_buildings_vel
 
@@ -664,7 +666,9 @@ const NewYork = () => {
 
     bushes.position.x -= bush_vel
 
-    if (bushes.position.x < BUSH_LOOP_TRIGGER) {
+    if (size.width < MOBILE_WIDTH && bushes.position.x < BUSH_LOOP_TRIGGER_MOBILE) {
+      bushes.position.x = BUSH_RESTART_POSITION_MOBILE
+    } else if (bushes.position.x < BUSH_LOOP_TRIGGER) {
       bushes.position.x = BUSH_RESTART_POSITION
     }
   }

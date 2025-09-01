@@ -3,6 +3,7 @@ import * as dat from 'lil-gui'
 import type { BoundingBoxesMap, PipesState, ScoreReadySensor } from '../types/general_types'
 import bird_skins from '../db/bird_skins.json'
 
+const MOBILE_WIDTH = 600
 const SHOW_HELPERS = false
 const showHelpersAtom = atom(SHOW_HELPERS)
 
@@ -40,5 +41,6 @@ export {
   selectingBirdAtom,
   previewingBirdAtom,
   currentSkinAtom,
-  justUnlockedSkinAtom
+  justUnlockedSkinAtom,
+  MOBILE_WIDTH
 }
