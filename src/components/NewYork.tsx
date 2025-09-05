@@ -11,6 +11,7 @@ import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
   firstScoreReadySensorAtom,
+  gameLoadedAtom,
   gameOverAtom,
   guiAtom,
   lastPassedPipesAtom,
@@ -46,6 +47,7 @@ const NewYork = () => {
   const [gui] = useAtom(guiAtom)
   const [showHelpers] = useAtom(showHelpersAtom)
   const [bbMap, setBbMap] = useAtom(boundingBoxesMapAtom)
+  const [gameLoaded, setGameLoaded] = useAtom(gameLoadedAtom)
   const [playing, setPlaying] = useAtom(playingAtom)
   const [lastPassedPipes] = useAtom(lastPassedPipesAtom)
   const [pipesState, setPipesState] = useAtom(pipesStateAtom)
@@ -349,7 +351,8 @@ const NewYork = () => {
     const updatedPlatforms = addPlatform(TOTAL_PLATFORMS - 1)!
     setBbMap({ ...bbMap, ...updatedPlatforms.updatedBbMap })
     setSceneChildren([...sceneChildren, ...updatedPlatforms.updatedSceneChildren])
-  }, [addPlatform, bbMap, sceneChildren, setBbMap])
+    setGameLoaded(true)
+  }, [addPlatform, bbMap, sceneChildren, setBbMap, setGameLoaded])
 
   // 3) Trigger pipes opening when we start playing
   useEffect(() => {
@@ -683,7 +686,7 @@ const NewYork = () => {
       directional_light_ref.current.position.copy(dlightPosition)
     }
 
-    if (!bbMap || gameOver) return
+    if (!bbMap || gameOver || !gameLoaded) return
 
     const safe_delta = Math.min(delta, 0.1)
 

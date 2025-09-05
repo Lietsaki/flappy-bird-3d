@@ -9,6 +9,7 @@ const showHelpersAtom = atom(SHOW_HELPERS)
 
 const guiAtom = atom(SHOW_HELPERS ? new dat.GUI({ closeFolders: false }) : null)
 const boundingBoxesMapAtom = atom<BoundingBoxesMap | null>(null)
+const gameLoadedAtom = atom(false)
 
 const lastPassedPipesAtom = atom<string>('sensor_pipes_3')
 
@@ -42,5 +43,6 @@ export {
   previewingBirdAtom,
   currentSkinAtom,
   justUnlockedSkinAtom,
+  gameLoadedAtom,
   MOBILE_WIDTH
 }
