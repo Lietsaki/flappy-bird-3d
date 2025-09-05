@@ -14,7 +14,6 @@ import {
   gameOverAtom,
   guiAtom,
   lastPassedPipesAtom,
-  MOBILE_WIDTH,
   pipesStateAtom,
   playingAtom,
   restartingGameAtom
@@ -34,9 +33,7 @@ const LOOP_TRIGGER = -150
 const BUILDINGS_LOOP_TRIGGER = -120
 const BUILDINGS_RESTART_POSITION = 15
 const BUSH_LOOP_TRIGGER = -200
-const BUSH_LOOP_TRIGGER_MOBILE = -175
-const BUSH_RESTART_POSITION = 20
-const BUSH_RESTART_POSITION_MOBILE = -15
+const BUSHES_OFFSET = -12
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
@@ -56,9 +53,10 @@ const NewYork = () => {
   const [gameOver] = useAtom(gameOverAtom)
   const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
 
-  const { scene, clock, size } = useThree()
+  const { scene, clock } = useThree()
 
   const aux_vec3_1 = useRef(new THREE.Vector3())
+  const aux_box_1 = useRef(new THREE.Box3())
   const base_bottom_pipe_y = useRef(0)
   const base_top_pipe_y = useRef(0)
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
@@ -150,8 +148,9 @@ const NewYork = () => {
     const first_pipe = model.scene.children.find((child) => child.name === 'pipe_bottom_0')
     const first_floor_platform = model.scene.children.find((child) => child.name === 'floor_platform_0')
     const first_top_pipe_preexisting = model.scene.children.find((child) => child.name === 'pipe_top_0')
+    const bush = model.scene.children.find((child) => child.name === 'bush')
 
-    if (!first_pipe || !first_floor_platform || first_top_pipe_preexisting) return
+    if (!first_pipe || !first_floor_platform || first_top_pipe_preexisting || !bush) return
 
     // Offset the first platform to the left so there is no visible empty space
     first_floor_platform.position.x -= 40
@@ -177,7 +176,13 @@ const NewYork = () => {
     const first_slice_objects = [first_floor_platform, first_pipe, first_top_pipe, third_pipe, fourth_pipe]
     boundingBoxesMap = addBboxes(first_slice_objects)
 
-    model.scene.add(first_top_pipe, third_pipe, fourth_pipe)
+    const bush_copy = bush.clone()
+    bush_copy.name = 'bush_copy'
+    const bush_bbox = aux_box_1.current.setFromObject(bush_copy)
+    const bush_length = bush_bbox.getSize(aux_vec3_1.current)
+    bush_copy.position.x += bush_length.x + BUSHES_OFFSET
+
+    model.scene.add(first_top_pipe, third_pipe, fourth_pipe, bush_copy)
     platformSlices.current.push({
       pipes: [first_pipe, first_top_pipe, third_pipe, fourth_pipe],
       terrain: first_floor_platform
@@ -238,7 +243,7 @@ const NewYork = () => {
         new_terrain_name.splice(2, 1, new_terrain_number + '')
         new_terrain.name = new_terrain_name.join('_')
 
-        const terrain_bbox = new THREE.Box3().setFromObject(new_terrain)
+        const terrain_bbox = aux_box_1.current.setFromObject(new_terrain)
 
         // Calculate terrain length: This is equivalent to bbox.max.x - bbox.min.x
         const terrain_length = terrain_bbox.getSize(aux_vec3_1.current)
@@ -304,7 +309,7 @@ const NewYork = () => {
       if (platformSlices.current.length < 2) return
 
       const last_platform = platformSlices.current[platformSlices.current.length - 1]
-      const last_terrain_bbox = new THREE.Box3().setFromObject(last_platform.terrain)
+      const last_terrain_bbox = aux_box_1.current.setFromObject(last_platform.terrain)
       const distance_between_terrains = last_terrain_bbox.getSize(aux_vec3_1.current).x - TERRAINS_OFFSET
 
       platform.terrain.position.x = last_platform.terrain.position.x + distance_between_terrains
@@ -562,22 +567,18 @@ const NewYork = () => {
   }
 
   const updatebackground = (delta: number) => {
-    const generic_buildings = model.scene.children.filter((child) =>
-      child.name.includes('generic_buildings_group')
-    )
-    const special_buildings = model.scene.children.filter((child) => child.name.includes('sp_'))
-    const bg_clouds = model.scene.children.filter((child) => child.name.includes('bg_clouds'))
-    const owtc_clouds = model.scene.children.filter((child) => child.name.includes('owtc_clouds'))
-    const empire_state_clouds = model.scene.children.filter((child) =>
-      child.name.includes('empire_state_clouds')
-    )
-    const central_park_clouds = model.scene.children.filter((child) =>
-      child.name.includes('central_park_clouds')
-    )
-    const brooklyn_clouds = model.scene.children.filter((child) => child.name.includes('brooklyn_clouds'))
-    const chrysler_clouds = model.scene.children.filter((child) => child.name.includes('chrysler_clouds'))
-    const cloud_discs = model.scene.children.filter((child) => child.name.includes('cloud_disc'))
-    const bushes = model.scene.children.find((child) => child.name === 'bushes') as THREE.Object3D
+    const { children } = model.scene
+
+    const generic_buildings = children.filter((child) => child.name.includes('generic_buildings_group'))
+    const special_buildings = children.filter((child) => child.name.includes('sp_'))
+    const bg_clouds = children.filter((child) => child.name.includes('bg_clouds'))
+    const owtc_clouds = children.filter((child) => child.name.includes('owtc_clouds'))
+    const empire_state_clouds = children.filter((child) => child.name.includes('empire_state_clouds'))
+    const central_park_clouds = children.filter((child) => child.name.includes('central_park_clouds'))
+    const brooklyn_clouds = children.filter((child) => child.name.includes('brooklyn_clouds'))
+    const chrysler_clouds = children.filter((child) => child.name.includes('chrysler_clouds'))
+    const cloud_discs = children.filter((child) => child.name.includes('cloud_disc'))
+    const bushes = children.filter((child) => child.name.includes('bush')) as [THREE.Object3D, THREE.Object3D]
 
     const generic_buildings_vel = (playing ? 0.2 : 0.1) * delta
     const special_buildings_vel = (playing ? 0.3 : 0.2) * delta
@@ -664,12 +665,16 @@ const NewYork = () => {
       disc.rotation.y += 0.002 * delta * disc.userData.phase
     }
 
-    bushes.position.x -= bush_vel
+    for (let i = 0; i < bushes.length; i++) {
+      const bush = bushes[i]
+      bush.position.x -= bush_vel
 
-    if (size.width < MOBILE_WIDTH && bushes.position.x < BUSH_LOOP_TRIGGER_MOBILE) {
-      bushes.position.x = BUSH_RESTART_POSITION_MOBILE
-    } else if (bushes.position.x < BUSH_LOOP_TRIGGER) {
-      bushes.position.x = BUSH_RESTART_POSITION
+      if (bush.position.x < BUSH_LOOP_TRIGGER) {
+        const next_bush = bushes[i + 1] || bushes[0]
+        const bush_bbox = aux_box_1.current.setFromObject(bush)
+        const bush_length = bush_bbox.getSize(aux_vec3_1.current)
+        bush.position.x = next_bush.position.x + bush_length.x + BUSHES_OFFSET
+      }
     }
   }
 
