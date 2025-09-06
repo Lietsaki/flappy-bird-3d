@@ -34,7 +34,7 @@ const LOOP_TRIGGER = -150
 const BUILDINGS_LOOP_TRIGGER = -120
 const BUILDINGS_RESTART_POSITION = 15
 const BUSH_LOOP_TRIGGER = -200
-const BUSHES_OFFSET = -12
+const BUSHES_OFFSET = -8
 
 const NewYork = () => {
   const model = useGLTF('/models/ny_scene.glb')
