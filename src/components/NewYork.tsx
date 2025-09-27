@@ -17,7 +17,8 @@ import {
   lastPassedPipesAtom,
   pipesStateAtom,
   playingAtom,
-  restartingGameAtom
+  restartingGameAtom,
+  MOBILE_WIDTH
 } from '../store/store'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { showHelpersAtom } from '../store/store'
@@ -32,7 +33,6 @@ const TERRAINS_OFFSET = 0.04
 
 const LOOP_TRIGGER = -150
 const BUILDINGS_LOOP_TRIGGER = -120
-const BUILDINGS_RESTART_POSITION = 15
 const BUSH_LOOP_TRIGGER = -200
 const BUSHES_OFFSET = -8
 
@@ -55,7 +55,7 @@ const NewYork = () => {
   const [gameOver] = useAtom(gameOverAtom)
   const [restartingGame, setRestartingGame] = useAtom(restartingGameAtom)
 
-  const { scene, clock } = useThree()
+  const { scene, clock, size } = useThree()
 
   const aux_vec3_1 = useRef(new THREE.Vector3())
   const aux_box_1 = useRef(new THREE.Box3())
@@ -569,7 +569,7 @@ const NewYork = () => {
     }
   }
 
-  const updatebackground = (delta: number) => {
+  const updateBackground = (delta: number) => {
     const { children } = model.scene
 
     const generic_buildings = children.filter((child) => child.name.includes('generic_buildings_group'))
@@ -586,6 +586,8 @@ const NewYork = () => {
     const generic_buildings_vel = (playing ? 0.2 : 0.1) * delta
     const special_buildings_vel = (playing ? 0.3 : 0.2) * delta
     const bush_vel = (playing ? 1 : 0.5) * delta
+
+    const BUILDINGS_RESTART_POSITION = size.width < MOBILE_WIDTH ? 15 : 25
 
     for (const building of generic_buildings) {
       building.position.x -= generic_buildings_vel
@@ -726,7 +728,7 @@ const NewYork = () => {
       setRestartingGame(false)
     }
 
-    updatebackground(safe_delta)
+    updateBackground(safe_delta)
   })
 
   return (
