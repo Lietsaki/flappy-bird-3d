@@ -32,8 +32,6 @@ const BBOX_SENSOR_COLOR = 'crimson'
 const TERRAINS_OFFSET = 0.04
 
 const LOOP_TRIGGER = -150
-const BUILDINGS_LOOP_TRIGGER = -120
-const BUSH_LOOP_TRIGGER = -200
 const BUSHES_OFFSET = -8
 
 const NewYork = () => {
@@ -587,21 +585,42 @@ const NewYork = () => {
     const special_buildings_vel = (playing ? 0.3 : 0.2) * delta
     const bush_vel = (playing ? 1 : 0.5) * delta
 
-    const BUILDINGS_RESTART_POSITION = size.width < MOBILE_WIDTH ? 15 : 25
+    // ======================== CLOUDS & BUILDINGS LOOPING POSITIONS ======================== //
+    const physical_width = Math.round(size.width * window.devicePixelRatio)
+    const m_width = MOBILE_WIDTH * window.devicePixelRatio
+
+    let cloud_offset_loop = -0.05
+    if (physical_width > 2500) cloud_offset_loop = -0.035
+    if (physical_width > 4500) cloud_offset_loop = -0.02
+
+    let cloud_offset_restart = 0.013
+    if (physical_width > 2500) cloud_offset_restart = 0.011
+    if (physical_width > 4500) cloud_offset_restart = 0.01
+
+    const CLOUDS_RESTART_X = physical_width < m_width ? 15 : Math.round(physical_width * cloud_offset_restart)
+    const CLOUDS_LOOP_X = physical_width < m_width ? -120 : Math.round(physical_width * cloud_offset_loop)
+
+    let BUILDINGS_RESTART_X = physical_width < m_width ? 15 : 25
+    if (physical_width > 4500) BUILDINGS_RESTART_X = Math.round(physical_width * 0.009)
+
+    const BUILDINGS_LOOP_X = physical_width > 4500 ? -95 : -115
+    const BUSH_LOOP_X = physical_width > 2500 ? -220 : -200
+
+    // ==================================================================================== //
 
     for (const building of generic_buildings) {
       building.position.x -= generic_buildings_vel
 
-      if (building.position.x < BUILDINGS_LOOP_TRIGGER) {
-        building.position.x = BUILDINGS_RESTART_POSITION
+      if (building.position.x < BUILDINGS_LOOP_X) {
+        building.position.x = BUILDINGS_RESTART_X
       }
     }
 
     for (const building of special_buildings) {
       building.position.x -= special_buildings_vel
 
-      if (building.position.x < BUILDINGS_LOOP_TRIGGER) {
-        building.position.x = BUILDINGS_RESTART_POSITION
+      if (building.position.x < BUILDINGS_LOOP_X) {
+        building.position.x = BUILDINGS_RESTART_X
       }
     }
 
@@ -610,8 +629,8 @@ const NewYork = () => {
       cloud.position.x -= bg_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.12
 
-      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
-        cloud.position.x = BUILDINGS_RESTART_POSITION
+      if (cloud.position.x < CLOUDS_LOOP_X) {
+        cloud.position.x = CLOUDS_RESTART_X
       }
     }
 
@@ -620,8 +639,8 @@ const NewYork = () => {
       cloud.position.x -= owtc_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
-      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
-        cloud.position.x = BUILDINGS_RESTART_POSITION
+      if (cloud.position.x < BUILDINGS_LOOP_X) {
+        cloud.position.x = BUILDINGS_RESTART_X
       }
     }
 
@@ -631,8 +650,8 @@ const NewYork = () => {
       cloud.position.x -= empire_state_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
-      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
-        cloud.position.x = BUILDINGS_RESTART_POSITION
+      if (cloud.position.x < BUILDINGS_LOOP_X) {
+        cloud.position.x = BUILDINGS_RESTART_X
       }
     }
 
@@ -642,18 +661,17 @@ const NewYork = () => {
       cloud.position.x -= central_park_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
-      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
-        cloud.position.x = BUILDINGS_RESTART_POSITION
+      if (cloud.position.x < BUILDINGS_LOOP_X) {
+        cloud.position.x = BUILDINGS_RESTART_X
       }
     }
 
     for (const cloud of brooklyn_clouds) {
-      const brooklyn_clouds_vel = (playing ? getRandomNumber(0.3, 0.32) : getRandomNumber(0.2, 0.22)) * delta
-      cloud.position.x -= brooklyn_clouds_vel
+      cloud.position.x -= special_buildings_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
-      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
-        cloud.position.x = BUILDINGS_RESTART_POSITION
+      if (cloud.position.x < BUILDINGS_LOOP_X) {
+        cloud.position.x = BUILDINGS_RESTART_X
       }
     }
 
@@ -661,8 +679,8 @@ const NewYork = () => {
       cloud.position.x -= special_buildings_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
-      if (cloud.position.x < BUILDINGS_LOOP_TRIGGER) {
-        cloud.position.x = BUILDINGS_RESTART_POSITION
+      if (cloud.position.x < BUILDINGS_LOOP_X) {
+        cloud.position.x = BUILDINGS_RESTART_X
       }
     }
 
@@ -674,7 +692,7 @@ const NewYork = () => {
       const bush = bushes[i]
       bush.position.x -= bush_vel
 
-      if (bush.position.x < BUSH_LOOP_TRIGGER) {
+      if (bush.position.x < BUSH_LOOP_X) {
         const next_bush = bushes[i + 1] || bushes[0]
         const bush_bbox = aux_box_1.current.setFromObject(bush)
         const bush_length = bush_bbox.getSize(aux_vec3_1.current)
