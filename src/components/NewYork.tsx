@@ -635,7 +635,7 @@ const NewYork = () => {
     }
 
     for (const cloud of owtc_clouds) {
-      const owtc_clouds_vel = (playing ? getRandomNumber(0.3, 0.33) : getRandomNumber(0.2, 0.23)) * delta
+      const owtc_clouds_vel = (playing ? getRandomNumber(0.3, 0.32) : getRandomNumber(0.2, 0.21)) * delta
       cloud.position.x -= owtc_clouds_vel
       cloud.position.y = cloud.userData.baseY + Math.cos(clock.getElapsedTime() + cloud.userData.phase) * 0.2
 
