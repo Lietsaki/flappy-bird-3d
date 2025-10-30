@@ -55,6 +55,10 @@ const BIRD_ANIMATION_SPEEDMAP: { [key: string]: number } = {
   bird_idle: 1.5
 }
 
+const BIRD_NON_RESETTABLE_ANIMATIONS: { [key: string]: boolean } = {
+  bird_falling: true
+}
+
 const Bird = () => {
   const bird_model = useGLTF('/models/bird.glb')
   const animations = useAnimations(bird_model.animations, bird_model.scene)
@@ -102,6 +106,7 @@ const Bird = () => {
       const currentClip = currentAction?.getClip()
 
       if (currentAction && currentClip && currentClip.name === animation_name) {
+        if (BIRD_NON_RESETTABLE_ANIMATIONS[currentClip.name]) return
         currentAction.reset()
         return
       }
