@@ -1,14 +1,14 @@
 import { useGLTF } from '@react-three/drei'
 import type { SceneChild, PlatformSlice, BoundingBoxesMap } from '../types/general_types'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 
-import { useRef } from 'react'
 import * as THREE from 'three'
 import { Object3D } from 'three'
 // import { useHelper } from '@react-three/drei'
 
 import { useAtom } from 'jotai'
 import {
+  showHelpersAtom,
   boundingBoxesMapAtom,
   firstScoreReadySensorAtom,
   gameLoadedAtom,
@@ -21,7 +21,6 @@ import {
   MOBILE_WIDTH
 } from '../store/store'
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
-import { showHelpersAtom } from '../store/store'
 import { getRandomNumber } from '../helpers/helper_functions'
 
 const TOTAL_PLATFORMS = 7
