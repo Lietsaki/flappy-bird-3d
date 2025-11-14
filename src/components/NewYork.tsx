@@ -492,7 +492,7 @@ const NewYork = () => {
       const pipes_number = bottom_pipe.name.split('_')[2]
       const name = `sensor_pipes_${pipes_number}`
 
-      const bbox = bbMap[name].bbox
+      const { bbox } = bbMap[name]
 
       bbox.set(
         new THREE.Vector3(bottom_pipe.bbox.min.x, bottom_pipe.bbox.max.y, bottom_pipe.bbox.min.z),
@@ -503,12 +503,6 @@ const NewYork = () => {
       bbox.max.x -= 1
       bbox.min.z += 1
       bbox.max.z -= 1
-
-      bbMap[name] = {
-        name,
-        bbox,
-        type: 'sensor'
-      }
     }
   }
 
