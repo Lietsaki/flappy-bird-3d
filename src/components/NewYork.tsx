@@ -142,7 +142,6 @@ const NewYork = () => {
     NYC_material.map!.minFilter = THREE.LinearFilter
 
     if (sceneChildren.length) return
-    let boundingBoxesMap: BoundingBoxesMap = {}
 
     const first_pipe = model.scene.children.find((child) => child.name === 'pipe_bottom_0')
     const first_floor_platform = model.scene.children.find((child) => child.name === 'floor_platform_0')
@@ -173,7 +172,7 @@ const NewYork = () => {
     fourth_pipe.position.x += DISTANCE_BETWEEN_PIPES
 
     const first_slice_objects = [first_floor_platform, first_pipe, first_top_pipe, third_pipe, fourth_pipe]
-    boundingBoxesMap = addBboxes(first_slice_objects)
+    const boundingBoxesMap = addBboxes(first_slice_objects)
 
     const bush_copy = bush.clone()
     bush_copy.name = 'bush_copy'
