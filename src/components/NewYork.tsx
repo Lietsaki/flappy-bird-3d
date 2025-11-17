@@ -209,7 +209,7 @@ const NewYork = () => {
 
     const MIN_OFFSET = 1
 
-    while (Math.abs(pair_2_offset - pair_1_offset) < MIN_OFFSET && negative_1 === negative_2) {
+    if (Math.abs(pair_2_offset - pair_1_offset) < MIN_OFFSET && negative_1 === negative_2) {
       negative_2 = !negative_2
     }
 
