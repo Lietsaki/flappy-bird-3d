@@ -5,7 +5,6 @@ import type { BirdAnimationName, SceneChild } from '../types/general_types'
 import { useAtom } from 'jotai'
 import {
   boundingBoxesMapAtom,
-  currentSkinAtom,
   firstScoreReadySensorAtom,
   gameOverAtom,
   justUnlockedSkinAtom,
@@ -59,6 +58,13 @@ const BIRD_NON_RESETTABLE_ANIMATIONS: { [key: string]: boolean } = {
   bird_falling: true
 }
 
+const TEXTURE_PATHS = {
+  classic_bird_texture: '/textures/classic_bird_texture.png',
+  dragonheart_bird_texture: '/textures/dragonheart_bird_texture.png',
+  ghost_bird_texture: '/textures/ghost_bird_texture.png',
+  supersonic_bird_texture: '/textures/supersonic_bird_texture.png'
+}
+
 const Bird = () => {
   const bird_model = useGLTF('/models/bird.glb')
   const animations = useAnimations(bird_model.animations, bird_model.scene)
@@ -89,15 +95,9 @@ const Bird = () => {
 
   const [selectingBird] = useAtom(selectingBirdAtom)
   const [previewingBird] = useAtom(previewingBirdAtom)
-  const [currentSkin] = useAtom(currentSkinAtom)
   const [, setJustUnlockedSkin] = useAtom(justUnlockedSkinAtom)
 
-  const bird_textures = useTexture({
-    classic_bird_texture: '/textures/classic_bird_texture.png',
-    dragonheart_bird_texture: '/textures/dragonheart_bird_texture.png',
-    ghost_bird_texture: '/textures/ghost_bird_texture.png',
-    supersonic_bird_texture: '/textures/supersonic_bird_texture.png'
-  }) as { [key: string]: THREE.Texture }
+  const bird_textures = useTexture(TEXTURE_PATHS) as { [key: string]: THREE.Texture }
 
   const { scene, camera } = useThree()
 
@@ -259,7 +259,7 @@ const Bird = () => {
   useEffect(() => {
     if (!previewingBird || playing) return
     setTexture(previewingBird)
-  }, [bird_textures, previewingBird, currentSkin, playing, setTexture])
+  }, [previewingBird, playing, setTexture])
 
   const getImpactSprite = () => {
     if (!bird_body.current || !showingImpact) return null
