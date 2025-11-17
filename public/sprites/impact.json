@@ -8,7 +8,7 @@
     { "frame": { "x": 1280, "y": 0, "w": 256, "h": 256 }, "sourceSize": { "w": 256, "h": 256 } }
   ],
   "meta": {
-    "image": "impact_1.png",
+    "image": "impact.png",
     "size": {
       "w": 1536,
       "h": 256
