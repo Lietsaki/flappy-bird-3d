@@ -38,8 +38,7 @@ const DebugGui = () => {
     // OrbitControls takes hold of the camera and does not allow to change the rotation programatically.
     // Comment the orbit controls and this will work, but it's more useful to keep 'em, at least that way we can
     // see the rotation values change when manipulated by the orbit controls.
-    // NOTE: For rotation, use PI as the range values, since PI represents half of a rotation in a circle, however, to tweak the camera
-    // We need smaller values, so I'm going with 0.5
+    // NOTE: For rotation, use PI as the range values, since PI represents half of a rotation in a circle.
     const range = Math.PI
     guiCameraFolder.add(camera.rotation, 'x').min(-range).max(range).step(0.01).name('rotationX').listen()
     guiCameraFolder.add(camera.rotation, 'y').min(-range).max(range).step(0.01).name('rotationY').listen()
