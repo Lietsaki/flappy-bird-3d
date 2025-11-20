@@ -198,7 +198,7 @@ const NewYork = () => {
 
     setBbMap(boundingBoxesMap)
     setSceneChildren(processedSceneChildren)
-  }, [sceneChildren, model, scene, setBbMap, showHelpers, addBboxes, bg_texture])
+  }, [sceneChildren, model, scene, setBbMap, addBboxes, bg_texture])
 
   const addOffsetsToPlatform = (platform: PlatformSlice, applyOffsetsMap = [true, true]) => {
     const pair_1_offset = getRandomNumber(4, 6)
