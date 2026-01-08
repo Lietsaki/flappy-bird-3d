@@ -148,9 +148,6 @@ const Bird = () => {
   useEffect(() => {
     if (sceneChild) return
 
-    const bird_material = bird_model.materials.bird_material as THREE.MeshStandardMaterial
-    bird_material.map!.minFilter = THREE.LinearFilter
-
     const bird_rig = bird_model.scene.children.find((child) => child.name === 'bird_rig')!
     const bird_bbox = bird_model.scene.children.find((child) => child.name === 'bird_bbox')!
 
