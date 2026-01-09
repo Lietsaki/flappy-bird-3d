@@ -1,6 +1,12 @@
 import { useGLTF } from '@react-three/drei'
 import type { SceneChild, PlatformSlice, BoundingBoxesMap } from '../types/general_types'
-import { useCallback, useEffect, useState, useRef } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useRef
+  // type RefObject
+} from 'react'
 
 import * as THREE from 'three'
 import { Object3D } from 'three'
@@ -60,8 +66,12 @@ const NewYork = () => {
   const base_top_pipe_y = useRef(0)
   const directional_light_ref = useRef<THREE.DirectionalLight>(null)
 
-  // This typing error doesn't affect us
-  // useHelper(directional_light_ref, THREE.DirectionalLightHelper, 1, 'red')
+  // useHelper(
+  //   directional_light_ref as RefObject<THREE.DirectionalLight>,
+  //   THREE.DirectionalLightHelper,
+  //   1,
+  //   'red'
+  // )
 
   const addBboxes = useCallback(
     (objects: THREE.Object3D[]) => {
