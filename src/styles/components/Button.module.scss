@@ -18,6 +18,10 @@
     font-weight: 600;
     padding: 0px 10px;
     text-shadow: 2px 2px 0px $dark_orange;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &.btn_selected {
@@ -56,11 +60,19 @@
     }
   }
 
+  @include phones {
+    .btn_content {
+      padding: 5px 10px;
+      font-size: 30px;
+    }
+  }
+
   @include small-phones {
     min-width: 200px;
 
     .btn_content {
-      font-size: 30px;
+      padding: 0px 10px;
+      font-size: 28px;
     }
   }
 

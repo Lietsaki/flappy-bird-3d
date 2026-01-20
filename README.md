@@ -1,4 +1,4 @@
-# Flappy Bird 3D (React + TypeScript + Vite)
+# Bird in Boots 3D (React + TypeScript + Vite)
 
 To run the project, just do `npm i`, then `npm run dev` (see other scripts in package.json).
 

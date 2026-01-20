@@ -186,7 +186,7 @@ const InteractUI = () => {
     return (
       <div className={`${right_area} ${exiting_class}`}>
         <div className={game_title_area}>
-          <div className={game_title}>Flappy Bird</div>
+          <div className={game_title}>Bird In Boots</div>
         </div>
 
         {getMenu()}
