@@ -24,6 +24,8 @@ import { getRandomNumber } from '../helpers/helper_functions'
 import bird_skins from '../db/bird_skins.json'
 import { isSkinUnlocked, saveHighestScore, unlockSkin } from '../db/localStorage'
 
+useTexture.preload('/sprites/impact.png')
+
 const GLIDING_ANIMATION_TOP = 18
 const GLIDING_ANIMATION_BOTTOM = 17.5
 const FRAME_GRAVITY = 18
